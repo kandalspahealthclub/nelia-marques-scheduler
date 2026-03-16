@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nélia Marques</title>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet">
+
+    <!-- Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <link rel="stylesheet" href="styles.css?v=2">
+</head>
+
+<body>
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="brand">
+                <img src="logo.png" alt="Logo" class="sidebar-logo">
+            </div>
+            <nav class="nav-menu">
+                <button class="nav-item active" data-view="dashboard">Painel</button>
+                <button class="nav-item" data-view="calendar">Agenda</button>
+                <button class="nav-item" data-view="clients">Clientes</button>
+                <button class="nav-item" data-view="services">Serviços</button>
+                <button class="nav-item" data-view="reports">Relatórios</button>
+                <button class="nav-item" data-view="backup">Backup</button>
+            </nav>
+
+
+        </aside>
+
+        <main class="main-content">
+            <header class="top-bar">
+                <h1 id="page-title">Painel</h1>
+                <div class="actions">
+                    <button class="btn btn-primary" id="btn-new-appointment">
+                        <i class="ph ph-plus"></i> Novo Agendamento
+                    </button>
+                    <!-- Dedicated button for new service, hidden by default unless in Service View -->
+                    <button class="btn btn-primary" id="btn-new-service" style="display: none;">
+                        <i class="ph ph-plus"></i> Novo Serviço
+                    </button>
+                    <button class="btn btn-primary" id="btn-new-client" style="display: none;">
+                        <i class="ph ph-plus"></i> Novo Cliente
+                    </button>
+                    <button class="btn btn-primary" id="btn-print-report" style="display: none; background: #64748b;">
+                        <i class="ph ph-file-pdf"></i> Gerar PDF
+                    </button>
+                </div>
+            </header>
+
+            <div id="search-zone" style="display: none; padding: 0 2rem 1rem 2rem;">
+                <div id="search-container" style="max-width: 400px;">
+                    <div style="position: relative; display: flex; align-items: center;">
+                        <i class="ph ph-magnifying-glass"
+                            style="position: absolute; left: 12px; color: var(--text-tertiary);"></i>
+                        <input type="text" id="client-search" placeholder="Pesquisar clientes..."
+                            style="width: 100%; padding: 10px 12px 10px 38px; border: 1px solid var(--border-color); border-radius: 10px; font-size: 0.9rem; background: var(--bg-card); transition: all 0.2s;">
+                    </div>
+                </div>
+            </div>
+
+            <div id="content-area" class="content-area">
+                <!-- Content injected via JS -->
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals Overlay -->
+    <div class="modal-overlay" id="modal-overlay">
+
+        <!-- Appointment Modal -->
+        <div class="modal" id="appointment-modal">
+            <div class="modal-header">
+                <h3 id="modal-title">Novo Agendamento</h3>
+                <button type="button" class="close-modal"><i class="ph ph-x"></i></button>
+            </div>
+            <div class="modal-body">
+                <form id="appointment-form">
+                    <input type="hidden" id="appt-id">
+                    <div class="form-group">
+                        <label>Cliente</label>
+                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                            <input list="client-list" id="appt-name" required style="flex: 1;"
+                                placeholder="Escolha um cliente..." autocomplete="off">
+                            <datalist id="client-list"></datalist>
+                            <button type="button" class="btn btn-ghost" id="btn-quick-add-client" title="Novo Cliente"
+                                style="padding: 6px; aspect-ratio: 1/1; border: 1px solid var(--border-color); border-radius: 8px;">
+                                <i class="ph ph-user-plus" style="font-size: 1.2rem;"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Data</label>
+                            <input type="date" id="appt-date" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Horário</label>
+                            <input type="time" id="appt-time" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Serviços</label>
+                        <div id="selected-services-container"
+                            style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.5rem;">
+                            <!-- Selected services will appear here -->
+                        </div>
+                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                            <select id="appt-type" style="flex: 1;">
+                                <!-- Options populated dynamically -->
+                            </select>
+                            <button type="button" class="btn btn-ghost" id="btn-add-service-to-appt"
+                                title="Adicionar Serviço"
+                                style="padding: 6px; aspect-ratio: 1/1; border: 1px solid var(--border-color); border-radius: 8px;">
+                                <i class="ph ph-plus" style="font-size: 1.2rem;"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-ghost close-modal-btn">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Salvar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Client Modal -->
+        <div class="modal" id="client-modal">
+            <div class="modal-header">
+                <h3>Editar Cliente</h3>
+                <button type="button" class="close-modal-client"><i class="ph ph-x"></i></button>
+            </div>
+            <div class="modal-body">
+                <form id="client-form">
+                    <input type="hidden" id="client-id">
+                    <div class="form-group">
+                        <label>Nome Completo</label>
+                        <input type="text" id="client-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Telefone</label>
+                        <input type="tel" id="client-phone" placeholder="(11) 99999-9999" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Observações</label>
+                        <textarea id="client-observations" rows="3" placeholder="Notas sobre o cliente..."></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-ghost close-client-btn">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Service Modal -->
+        <div class="modal" id="service-modal">
+            <div class="modal-header">
+                <h3 id="service-modal-title">Novo Serviço</h3>
+                <button type="button" class="close-modal-service"><i class="ph ph-x"></i></button>
+            </div>
+            <div class="modal-body">
+                <form id="service-form">
+                    <input type="hidden" id="service-id">
+                    <div class="form-group">
+                        <label>Nome do Serviço</label>
+                        <input type="text" id="service-name" required placeholder="Ex: Unhas, Cabelo...">
+                    </div>
+                    <div class="form-group">
+                        <label>Preço (€)</label>
+                        <input type="number" id="service-price" placeholder="0" step="0.01">
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-ghost close-service-btn">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Salvar Serviço</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Message Modal -->
+        <div class="modal" id="message-modal">
+            <div class="modal-header">
+                <h3>Enviar Mensagem</h3>
+                <button type="button" class="close-modal-msg"><i class="ph ph-x"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Para</label>
+                    <input type="text" id="msg-recipient" readonly style="background-color: var(--bg-hover);">
+                    <input type="hidden" id="msg-phone-hidden">
+                </div>
+                <div class="form-group">
+                    <label>Mensagem</label>
+                    <textarea id="msg-content" rows="4" placeholder="Digite sua mensagem aqui..." required></textarea>
+                </div>
+
+                <div style="margin-top: 1.5rem; display: flex; flex-direction: column; gap: 0.5rem;">
+                    <!-- Added WhatsApp back -->
+                    <button id="btn-send-whatsapp" class="btn"
+                        style="background: #25D366; color: white; width: 100%; justify-content: center; border:none;">
+                        <i class="ph ph-whatsapp-logo" style="font-size: 1.2rem;"></i> Enviar via WhatsApp
+                    </button>
+
+                    <button id="btn-send-sms" class="btn"
+                        style="background: #3b82f6; color: white; width: 100%; justify-content: center; border:none;">
+                        <i class="ph ph-chat-text" style="font-size: 1.2rem;"></i> Enviar via SMS (Móvel)
+                    </button>
+                    <button id="btn-save-log" class="btn"
+                        style="background: var(--bg-hover); color: var(--text-primary); width: 100%; justify-content: center; border: 1px solid var(--border-color);">
+                        <i class="ph ph-floppy-disk" style="font-size: 1.2rem;"></i> Apenas Salvar (Interno)
+                    </button>
+                </div>
+
+                <div class="form-actions" style="margin-top: 1rem; justify-content: center;">
+                    <button type="button" class="btn btn-ghost close-msg-btn">Fechar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Confirm Modal -->
+
+
+    </div>
+
+    <div class="notification-container" id="notification-container"></div>
+
+    <script src="script.js?v=12"></script>
+</body>
+
+</html>

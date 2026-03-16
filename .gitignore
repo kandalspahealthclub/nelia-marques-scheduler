@@ -1,0 +1,9 @@
+# Arquivos de dados locais
+data.json
+
+# Pacotes de deploy e zips
+*.zip
+
+# Arquivos temporários e logs
+*.log
+base64_logo.txt
