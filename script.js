@@ -50,13 +50,13 @@ function updateSyncStatus(status) {
     }
 
     if (status === 'saving') {
-        indicator.innerHTML = '<i class="ph-fill ph-circle-notch ph-spin" style="color:var(--accent);"></i> Gravando na Nuvem...';
+        indicator.innerHTML = '<i class="ph-fill ph-circle-notch ph-spin" style="color:var(--accent);"></i> A guardar na nuvem...';
         indicator.style.opacity = '1';
     } else if (status === 'synced') {
-        indicator.innerHTML = '<i class="ph-fill ph-check-circle" style="color:var(--success);"></i> Nuvem Sincronizada';
+        indicator.innerHTML = '<i class="ph-fill ph-check-circle" style="color:var(--success);"></i> Sincronizado com a nuvem';
         setTimeout(() => { if (!isSaving && !isPendingSave) indicator.style.opacity = '0'; }, 3000);
     } else if (status === 'error') {
-        indicator.innerHTML = '<i class="ph-fill ph-warning-circle" style="color:var(--danger);"></i> Erro na Conexão';
+        indicator.innerHTML = '<i class="ph-fill ph-warning-circle" style="color:var(--danger);"></i> Erro de ligação';
         indicator.style.opacity = '1';
     }
 }
@@ -69,33 +69,49 @@ function brandedConfirm(message) {
 async function initializeData() {
     updateSyncStatus('saving');
     
-    stateRef.on('value', (snapshot) => {
+    try {
+        // Use .once() first for a more stable initial load on mobile
+        const snapshot = await stateRef.once('value');
         const val = snapshot.val();
         
-        // If the database is empty, initialize with defaultState
         if (!val) {
-            saveState(); // Writes defaultState to Firebase
-            return;
+            console.log("Database empty, initializing...");
+            await saveState();
+        } else {
+            console.log("Initial data loaded.");
+            state = val;
+            refreshCurrentView();
+            updateSyncStatus('synced');
         }
 
-        // Overwrite protection: Don't update if user is in a modal
-        if (document.querySelector('.modal-overlay.open') || isSaving || isPendingSave) return;
+        // After initial load, set up the real-time listener
+        stateRef.on('value', (snapshot) => {
+            const newVal = snapshot.val();
+            if (!newVal) return;
 
-        console.log("Syncing from Cloud...");
-        const activeView = state.currentView;
-        const activeMonth = state.selectedReportMonth;
-        const activeArchive = state.showArchive;
-        
-        state = val;
-        
-        // Restore local UI state
-        state.currentView = activeView;
-        state.selectedReportMonth = activeMonth;
-        state.showArchive = activeArchive;
+            // Overwrite protection: Don't update if user is in a modal or saving
+            if (document.querySelector('.modal-overlay.open') || isSaving || isPendingSave) return;
 
-        refreshCurrentView();
-        updateSyncStatus('synced');
-    });
+            if (JSON.stringify(newVal) !== JSON.stringify(state)) {
+                console.log("Cloud update received...");
+                const activeView = state.currentView;
+                const activeMonth = state.selectedReportMonth;
+                const activeArchive = state.showArchive;
+                
+                state = newVal;
+                state.currentView = activeView;
+                state.selectedReportMonth = activeMonth;
+                state.showArchive = activeArchive;
+
+                refreshCurrentView();
+                updateSyncStatus('synced');
+            }
+        });
+
+    } catch (error) {
+        console.error("Firebase Init Error:", error);
+        updateSyncStatus('error');
+    }
 }
 
 function saveState() {
