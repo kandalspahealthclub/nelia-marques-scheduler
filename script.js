@@ -75,6 +75,7 @@ async function initializeData() {
         } else {
             state = val;
             refreshCurrentView();
+            updateClientDatalist();
             updateSyncStatus('synced');
         }
 
@@ -87,6 +88,7 @@ async function initializeData() {
                 state = newVal;
                 state.currentView = activeView;
                 refreshCurrentView();
+                updateClientDatalist();
                 updateSyncStatus('synced');
             }
         });
@@ -425,6 +427,7 @@ function triggerEditAppt(id) {
     renderSelectedServicesList();
     document.getElementById('modal-title').textContent = "Editar Marcação";
     updateServiceOptions();
+    updateClientDatalist();
     openModal(appointmentModal);
 }
 
@@ -464,6 +467,15 @@ function updateServiceOptions() {
     inputType.innerHTML = '<option value="" disabled selected>Adicionar serviço...</option>' + state.services.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
 }
 
+function updateClientDatalist() {
+    const dataList = document.getElementById('client-list');
+    if (!dataList) return;
+    dataList.innerHTML = state.clients.map(c => {
+        const obs = c.observations ? ` - ${c.observations}` : '';
+        return `<option value="${c.name}${obs}">`;
+    }).join('');
+}
+
 function renderSelectedServicesList() {
     const container = document.getElementById('selected-services-container');
     if (container) container.innerHTML = selectedServices.map((s, i) => `<div style="background:var(--accent-light); padding:4px 12px; border-radius:20px; font-size:0.85rem; display:flex; align-items:center; gap:8px;">${s} <i class="ph ph-x" onclick="removeServiceFromAppt(${i})" style="cursor:pointer"></i></div>`).join('');
@@ -496,6 +508,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('modal-title').textContent = "Nova Marcação";
         document.getElementById('appt-date').value = new Date().toISOString().split('T')[0];
         updateServiceOptions();
+        updateClientDatalist();
         openModal(appointmentModal);
     };
 
@@ -550,7 +563,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             state.clients.push(cData);
         }
-        await saveState(); closeModals(); refreshCurrentView(); showNotification('Cliente Guardado!');
+        await saveState(); closeModals(); refreshCurrentView(); updateClientDatalist(); showNotification('Cliente Guardado!');
     };
 
     document.getElementById('service-form').onsubmit = async (e) => {
