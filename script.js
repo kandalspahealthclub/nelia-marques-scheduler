@@ -1,3 +1,4 @@
+
 // 1. Configuração do Estado Inicial
 const defaultState = {
     appointments: [],
@@ -5,8 +6,7 @@ const defaultState = {
         { id: 1, name: "Maria Garcia", phone: "912345678" }
     ],
     services: [
-        { id: 1, name: "Consulta", duration: 30, price: 150 },
-        { id: 2, name: "Manicure", duration: 45, price: 20 },
+        { id: 1, name: "Consulta", duration: 30, price: 150 }
     ],
     messages: [],
     currentView: 'dashboard'
@@ -78,12 +78,10 @@ async function initializeData() {
             updateSyncStatus('synced');
         }
 
-        // Ouvinte em tempo real
         stateRef.on('value', (snapshot) => {
             const newVal = snapshot.val();
             if (!newVal) return;
             if (document.querySelector('.modal-overlay.open') || isSaving || isPendingSave) return;
-            
             if (JSON.stringify(newVal) !== JSON.stringify(state)) {
                 const activeView = state.currentView;
                 state = newVal;
@@ -110,25 +108,57 @@ function saveState() {
     });
 }
 
-// 4. Elementos do DOM
+// 4. DOM Elements
 let contentArea, pageTitle, navItems, modalOverlay;
+let btnNewAppt, btnNewService, btnNewClient, btnPrintReport, searchZone, clientSearchInput;
+let appointmentModal, clientModal, serviceModal, messageModal;
+
 function initDOMElements() {
     contentArea = document.getElementById('content-area');
     pageTitle = document.getElementById('page-title');
     navItems = document.querySelectorAll('.nav-item');
     modalOverlay = document.getElementById('modal-overlay');
+    btnNewAppt = document.getElementById('btn-new-appointment');
+    btnNewService = document.getElementById('btn-new-service');
+    btnNewClient = document.getElementById('btn-new-client');
+    btnPrintReport = document.getElementById('btn-print-report');
+    searchZone = document.getElementById('search-zone');
+    clientSearchInput = document.getElementById('client-search');
+    appointmentModal = document.getElementById('appointment-modal');
+    clientModal = document.getElementById('client-modal');
+    serviceModal = document.getElementById('service-modal');
+    messageModal = document.getElementById('message-modal');
 }
 
-// 5. Renderização das Vistas (PT-PT)
+// 5. Navigation
+function initNavigation() {
+    navItems.forEach(nav => {
+        nav.classList.toggle('active', nav.dataset.view === state.currentView);
+    });
+
+    navItems.forEach(item => {
+        item.addEventListener('click', (e) => {
+            navItems.forEach(nav => nav.classList.remove('active'));
+            e.currentTarget.classList.add('active');
+            state.currentView = e.currentTarget.dataset.view;
+            saveState();
+            refreshCurrentView();
+        });
+    });
+}
+
 function refreshCurrentView() {
     const view = state.currentView || 'dashboard';
-    
-    // Visibilidade dos botões
-    document.getElementById('btn-new-appointment').style.display = (view === 'calendar') ? 'inline-flex' : 'none';
-    document.getElementById('btn-new-service').style.display = (view === 'services') ? 'inline-flex' : 'none';
-    document.getElementById('btn-new-client').style.display = (view === 'clients') ? 'inline-flex' : 'none';
-    document.getElementById('btn-print-report').style.display = (view === 'reports') ? 'inline-flex' : 'none';
-    document.getElementById('search-zone').style.display = (view === 'clients' || view === 'services') ? 'block' : 'none';
+    if (btnNewAppt) btnNewAppt.style.display = (view === 'calendar') ? 'inline-flex' : 'none';
+    if (btnNewService) btnNewService.style.display = (view === 'services') ? 'inline-flex' : 'none';
+    if (btnNewClient) btnNewClient.style.display = (view === 'clients') ? 'inline-flex' : 'none';
+    if (btnPrintReport) btnPrintReport.style.display = (view === 'reports') ? 'inline-flex' : 'none';
+    if (searchZone) {
+        searchZone.style.display = (view === 'clients' || view === 'services') ? 'block' : 'none';
+        if (clientSearchInput) {
+            clientSearchInput.placeholder = (view === 'services') ? "Pesquisar serviços..." : "Pesquisar Nome ou Contacto";
+        }
+    }
 
     if (view === 'dashboard') renderDashboard();
     else if (view === 'calendar') renderCalendar();
@@ -138,156 +168,346 @@ function refreshCurrentView() {
     else if (view === 'backup') renderBackup();
 }
 
+// 6. Render Functions (Premium Look Restored)
 function renderDashboard() {
-    pageTitle.textContent = "Painel Principal";
-    const todayStr = new Date().toISOString().split('T')[0];
+    pageTitle.textContent = "Painel";
+    const today = new Date();
+    const tomorrow = new Date();
+    tomorrow.setDate(today.getDate() + 1);
+    const todayStr = today.toISOString().split('T')[0];
+    const tomorrowStr = tomorrow.toISOString().split('T')[0];
+    const todayDisplay = today.toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' });
+    const tomorrowDisplay = tomorrow.toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' });
+
     const todaysAppts = state.appointments.filter(a => a.date === todayStr);
+    const tomorrowAppts = state.appointments.filter(a => a.date === tomorrowStr);
+
+    const formatAppt = (appt) => {
+        const types = Array.isArray(appt.type) ? appt.type : [appt.type];
+        return `
+            <div class="appointment-item">
+                <div class="appt-time">${appt.time}</div>
+                <div class="appt-details">
+                    <span class="client-name">${appt.clientName}</span>
+                    <span class="appt-type"><i class="ph ph-sparkle"></i> ${types.join(', ')}</span>
+                </div>
+            </div>
+        `;
+    };
 
     contentArea.innerHTML = `
         <div class="dashboard-grid">
             <div class="card stat-card">
+                <div class="stat-header"><span class="stat-icon"><i class="ph ph-trend-up"></i></span></div>
                 <div class="stat-info"><span class="label">Total de Marcações</span><span class="value">${state.appointments.length}</span></div>
             </div>
             <div class="card stat-card">
+                <div class="stat-header"><span class="stat-icon"><i class="ph ph-users"></i></span></div>
                 <div class="stat-info"><span class="label">Total de Clientes</span><span class="value">${state.clients.length}</span></div>
             </div>
         </div>
-        <div class="section-header"><h2>Marcações para Hoje</h2></div>
-        <div class="appointments-list">
-            ${todaysAppts.length > 0 ? todaysAppts.map(a => `<div class="appointment-item"><b>${a.time}</b> - ${a.clientName} (${Array.isArray(a.type)?a.type.join(', '):a.type})</div>`).join('') : '<div class="empty-state">Sem marcações para hoje.</div>'}
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+            <div>
+                <div class="section-header"><h2>Agenda de Hoje</h2><span class="date-badge">${todayDisplay}</span></div>
+                <div class="appointments-list">${todaysAppts.length > 0 ? todaysAppts.map(formatAppt).join('') : '<div class="empty-state">Sem marcações para hoje.</div>'}</div>
+            </div>
+            <div>
+                <div class="section-header"><h2>Previsão para Amanhã</h2><span class="date-badge" style="background: var(--rose); color: white;">${tomorrowDisplay}</span></div>
+                <div class="appointments-list">${tomorrowAppts.length > 0 ? tomorrowAppts.map(formatAppt).join('') : '<div class="empty-state">Sem marcações para amanhã.</div>'}</div>
+            </div>
         </div>
     `;
 }
 
 function renderCalendar() {
-    pageTitle.textContent = "Agenda de Marcações";
+    pageTitle.textContent = "Agenda";
     const today = new Date().toISOString().split('T')[0];
-    const sorted = [...state.appointments].sort((a,b) => a.time.localeCompare(b.time));
-    const future = sorted.filter(a => a.date >= today);
+    const allSorted = [...state.appointments].sort((a, b) => new Date(a.date + 'T' + a.time) - new Date(b.date + 'T' + b.time));
+    const activeAppts = allSorted.filter(a => a.date >= today);
+    const pastAppts = allSorted.filter(a => a.date < today);
 
-    contentArea.innerHTML = `
-        <div class="appointments-list">
-            ${future.length > 0 ? future.map(a => `
+    const renderGrouped = (appts) => {
+        const grouped = {};
+        appts.forEach(appt => {
+            if (!grouped[appt.date]) grouped[appt.date] = [];
+            grouped[appt.date].push(appt);
+        });
+        let html = '';
+        for (const [date, dayAppts] of Object.entries(grouped)) {
+            const [y, m, d] = date.split('-');
+            const localDate = new Date(y, m - 1, d);
+            const dateStr = localDate.toLocaleDateString('pt-PT', { weekday: 'long', day: 'numeric', month: 'long' });
+            html += `<div style="margin-top: 2rem; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-primary); font-size: 0.9rem; text-transform: capitalize;">${dateStr}</div>`;
+            html += dayAppts.map(appt => `
                 <div class="appointment-item">
+                    <div class="appt-time">${appt.time}</div>
                     <div class="appt-details">
-                        <b>${a.date} | ${a.time}</b><br>
-                        <span>${a.clientName} - ${Array.isArray(a.type)?a.type.join(', '):a.type}</span>
+                        <span class="client-name">${appt.clientName}</span>
+                        <span class="appt-type"><i class="ph ph-sparkle"></i> ${Array.isArray(appt.type) ? appt.type.join(', ') : appt.type}</span>
                     </div>
                     <div class="appt-actions">
-                        <button onclick="triggerEditAppt('${a.id}')"><i class="ph ph-pencil"></i></button>
-                        <button class="btn-delete" onclick="triggerDelete('appointment', '${a.id}')"><i class="ph ph-trash"></i></button>
+                        <button type="button" class="js-edit-btn" data-id="${appt.id}" title="Editar"><i class="ph ph-pencil-simple"></i></button>
+                        <button type="button" class="js-msg-btn" data-name="${appt.clientName}" data-time="${appt.time}" title="Enviar Mensagem"><i class="ph ph-paper-plane-tilt"></i></button>
+                        <button type="button" class="js-delete-btn btn-delete" data-type="appointment" data-id="${appt.id}" title="Eliminar"><i class="ph ph-trash"></i></button>
                     </div>
                 </div>
-            `).join('') : '<div class="empty-state">Nenhuma marcação encontrada.</div>'}
-        </div>
-    `;
+            `).join('');
+        }
+        return html;
+    };
+
+    let fullHTML = `<div class="appointments-list">${activeAppts.length > 0 ? renderGrouped(activeAppts) : '<div class="empty-state">Nenhuma marcação futura encontrada.</div>'}</div>`;
+    if (pastAppts.length > 0) {
+        fullHTML += `
+            <div style="margin-top: 3rem; text-align: center; border-top: 1px dashed var(--border-color); padding-top: 2rem;">
+                <button type="button" class="btn btn-ghost" id="btn-toggle-archive" style="font-size: 0.85rem; color: var(--text-tertiary);">
+                    <i class="ph ph-archive-box"></i> ${state.showArchive ? 'Esconder Histórico' : 'Ver Histórico (' + pastAppts.length + ')'}
+                </button>
+            </div>
+            <div id="archive-container" class="appointments-list" style="display: ${state.showArchive ? 'block' : 'none'}; opacity: 0.7;">
+                ${renderGrouped(pastAppts)}
+            </div>
+        `;
+    }
+    contentArea.innerHTML = fullHTML;
+    const btnToggle = document.getElementById('btn-toggle-archive');
+    if (btnToggle) btnToggle.onclick = () => { state.showArchive = !state.showArchive; renderCalendar(); };
 }
 
 function renderClients() {
-    pageTitle.textContent = "Gestão de Clientes";
-    contentArea.innerHTML = `<div class="appointments-list">
-        ${state.clients.map(c => `
-            <div class="appointment-item">
-                <div class="appt-details"><b>${c.name}</b><br>${c.phone || 'Sem contacto'}</div>
-                <div class="appt-actions">
-                    <button onclick="triggerEditClient('${c.id}')"><i class="ph ph-pencil"></i></button>
-                    <button class="btn-delete" onclick="triggerDelete('client', '${c.id}')"><i class="ph ph-trash"></i></button>
-                </div>
+    pageTitle.textContent = "Clientes";
+    const normalize = (str) => (str || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    let filteredClients = state.clients;
+    if (state.clientSearchQuery) {
+        const query = normalize(state.clientSearchQuery);
+        filteredClients = state.clients.filter(c => normalize(c.name).includes(query) || (c.phone && normalize(c.phone).includes(query)));
+    }
+    if (filteredClients.length === 0) {
+        contentArea.innerHTML = '<div class="empty-state">Nenhum cliente encontrado.</div>';
+        return;
+    }
+    contentArea.innerHTML = `<div class="appointments-list">${filteredClients.map(client => `
+        <div class="appointment-item">
+            <div class="appt-details">
+                <span class="client-name">${client.name}</span>
+                <span class="appt-type"><i class="ph ph-phone"></i> ${client.phone || 'Sem contacto'}</span>
+                ${(client.observations) ? `<div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 6px; padding-top: 4px; border-top: 1px dashed var(--border-color);">${client.observations}</div>` : ''}
             </div>
-        `).join('')}
-    </div>`;
+            <div class="appt-actions">
+                <button type="button" class="js-edit-client-btn" data-id="${client.id}" title="Editar"><i class="ph ph-pencil-simple"></i></button>
+                <button type="button" class="js-msg-btn" data-name="${client.name}" data-time="" title="Mensagem"><i class="ph ph-paper-plane-tilt"></i></button>
+                <button type="button" class="js-delete-btn btn-delete" data-type="client" data-id="${client.id}" title="Eliminar"><i class="ph ph-trash"></i></button>
+            </div>
+        </div>
+    `).join('')}</div>`;
 }
 
 function renderServices() {
-    pageTitle.textContent = "Serviços e Preços";
-    contentArea.innerHTML = `<div class="appointments-list">
-        ${state.services.map(s => `
-            <div class="appointment-item">
-                <div class="appt-details"><b>${s.name}</b><br>€ ${parseFloat(s.price).toFixed(2)}</div>
-                <div class="appt-actions">
-                    <button onclick="triggerEditService('${s.id}')"><i class="ph ph-pencil"></i></button>
-                    <button class="btn-delete" onclick="triggerDelete('service', '${s.id}')"><i class="ph ph-trash"></i></button>
-                </div>
+    pageTitle.textContent = "Serviços";
+    let filtered = state.services;
+    const query = state.serviceSearchQuery ? state.serviceSearchQuery.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") : "";
+    if (query) filtered = state.services.filter(s => s.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(query));
+    if (filtered.length === 0) {
+        contentArea.innerHTML = '<div class="empty-state">Nenhum serviço encontrado.</div>';
+        return;
+    }
+    contentArea.innerHTML = `<div class="appointments-list">${filtered.map(service => `
+        <div class="appointment-item">
+            <div class="service-icon-box"><i class="ph ph-scissors"></i></div>
+            <div class="appt-details">
+                <span class="client-name">${service.name}</span>
+                <span class="appt-type"><i class="ph ph-tag"></i> € ${parseFloat(service.price).toFixed(2)}</span>
             </div>
-        `).join('')}
-    </div>`;
+            <div class="appt-actions">
+                <button type="button" class="js-edit-service-btn" data-id="${service.id}" title="Editar"><i class="ph ph-pencil-simple"></i> Editar</button>
+                <button type="button" class="js-delete-btn btn-delete" data-type="service" data-id="${service.id}" title="Eliminar"><i class="ph ph-trash"></i></button>
+            </div>
+        </div>
+    `).join('')}</div>`;
 }
 
 function renderReports() {
-    pageTitle.textContent = "Relatórios de Faturamento";
-    let total = state.appointments.reduce((acc, a) => acc + (parseFloat(a.price) || 0), 0);
+    pageTitle.textContent = "Relatórios";
+    if (!state.selectedReportMonth) state.selectedReportMonth = new Date().toISOString().substring(0, 7);
+    const selectedMonth = state.selectedReportMonth;
+    const monthAppts = state.appointments.filter(a => a.date.startsWith(selectedMonth));
+    const serviceSummary = {};
+    let totalRevenue = 0;
+    monthAppts.forEach(appt => {
+        const types = Array.isArray(appt.type) ? appt.type : [appt.type];
+        types.forEach(serviceName => {
+            const service = state.services.find(s => s.name === serviceName);
+            const price = service ? parseFloat(service.price) : 0;
+            if (!serviceSummary[serviceName]) serviceSummary[serviceName] = { count: 0, revenue: 0 };
+            serviceSummary[serviceName].count++;
+            serviceSummary[serviceName].revenue += price;
+            totalRevenue += price;
+        });
+    });
+    const displayMonth = new Date(selectedMonth + '-01').toLocaleDateString('pt-PT', { month: 'long', year: 'numeric' });
     contentArea.innerHTML = `
-        <div class="card">
-            <h3>Resumo Geral</h3>
-            <p>Faturamento Total: <b>€ ${total.toFixed(2)}</b></p>
+        <div class="report-controls no-print" style="margin-bottom: 2rem; display: flex; align-items: center; gap: 1rem; padding: 1rem; background: white; border-radius: 12px;">
+            <div style="font-weight: 600; font-size: 0.9rem;">Mês:</div>
+            <input type="month" id="report-month-picker" value="${selectedMonth}" style="padding: 8px; border-radius: 8px; border: 1px solid var(--border-color);">
+            <button class="btn btn-ghost" onclick="downloadBackup()" style="margin-left: auto;"><i class="ph ph-cloud-arrow-down"></i> Backup</button>
+        </div>
+        <div class="report-paper">
+            <h3>Relatório de ${displayMonth}</h3>
+            <div class="dashboard-grid" style="margin-top: 1rem;">
+                <div class="card"><span class="label">Faturamento</span><span class="value">€ ${totalRevenue.toFixed(2)}</span></div>
+                <div class="card"><span class="label">Total</span><span class="value">${monthAppts.length}</span></div>
+            </div>
         </div>
     `;
+    const picker = document.getElementById('report-month-picker');
+    if (picker) picker.onchange = (e) => { state.selectedReportMonth = e.target.value; saveState(); renderReports(); };
 }
 
 function renderBackup() {
-    pageTitle.textContent = "Segurança e Backup";
+    pageTitle.textContent = "Backup";
     contentArea.innerHTML = `
-        <div class="card" style="text-align:center; padding: 2rem;">
-            <button class="btn btn-primary" onclick="downloadBackup()" style="margin: 1rem;">Baixar Cópia (JSON)</button>
-            <button class="btn btn-ghost" onclick="uploadBackup()" style="margin: 1rem;">Restaurar Cópia</button>
+        <div class="card" style="max-width: 500px; margin: 2rem auto; text-align: center; padding: 2rem;">
+            <i class="ph ph-shield-check" style="font-size: 3rem; color: var(--accent); margin-bottom: 1rem;"></i>
+            <h2>Segurança de Dados</h2>
+            <div style="display: grid; gap: 1rem; margin-top: 1.5rem;">
+                <button class="btn btn-primary" onclick="downloadBackup()">Baixar Cópia</button>
+                <button class="btn btn-ghost" onclick="uploadBackup()">Restaurar Cópia</button>
+            </div>
         </div>
     `;
 }
 
-// 6. Ações e Triggers
+// 7. Actions & Modals
 window.triggerDelete = async function(type, id) {
-    if(!confirm("Tem a certeza que deseja eliminar?")) return;
+    if(!(await brandedConfirm('Deseja eliminar este item?'))) return;
     if(type === 'appointment') state.appointments = state.appointments.filter(a => a.id != id);
     else if(type === 'client') state.clients = state.clients.filter(c => c.id != id);
     else if(type === 'service') state.services = state.services.filter(s => s.id != id);
-    await saveState();
-    refreshCurrentView();
+    saveState(); refreshCurrentView();
 };
 
-window.triggerEditAppt = function(id) {
-    const a = state.appointments.find(x => x.id == id);
-    if(!a) return;
-    document.getElementById('appt-id').value = a.id;
-    document.getElementById('appt-name').value = a.clientName;
-    document.getElementById('appt-date').value = a.date;
-    document.getElementById('appt-time').value = a.time;
-    selectedServices = Array.isArray(a.type) ? [...a.type] : [a.type];
-    renderSelectedServicesList();
-    openModal(document.getElementById('appointment-modal'));
-};
-
-// Funções de Modal e Utilitários
-function openModal(el) {
+function openModal(modalEl) {
     document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
-    el.style.display = 'block';
+    modalEl.style.display = 'block';
+    modalOverlay.classList.add('open');
     modalOverlay.style.display = 'flex';
 }
-window.closeModals = function() { modalOverlay.style.display = 'none'; };
+window.closeModals = () => { modalOverlay.classList.remove('open'); setTimeout(() => { modalOverlay.style.display = 'none'; }, 200); };
+
+// 8. Event Delegation (Restore edit/msg logic)
+function setupEventDelegation() {
+    contentArea.addEventListener('click', (e) => {
+        const editBtn = e.target.closest('.js-edit-btn');
+        if (editBtn) triggerEditAppt(editBtn.dataset.id);
+        const editClientBtn = e.target.closest('.js-edit-client-btn');
+        if (editClientBtn) triggerEditClient(editClientBtn.dataset.id);
+        const editServiceBtn = e.target.closest('.js-edit-service-btn');
+        if (editServiceBtn) triggerEditService(editServiceBtn.dataset.id);
+        const msgBtn = e.target.closest('.js-msg-btn');
+        if (msgBtn) triggerMessage(msgBtn.dataset.name, msgBtn.dataset.time);
+        const delBtn = e.target.closest('.js-delete-btn');
+        if (delBtn) triggerDelete(delBtn.dataset.type, delBtn.dataset.id);
+    });
+}
+
+function triggerEditAppt(id) {
+    const appt = state.appointments.find(a => a.id == id);
+    if (!appt) return;
+    document.getElementById('appt-id').value = appt.id;
+    document.getElementById('appt-name').value = appt.clientName;
+    document.getElementById('appt-date').value = appt.date;
+    document.getElementById('appt-time').value = appt.time;
+    selectedServices = Array.isArray(appt.type) ? [...appt.type] : [appt.type];
+    renderSelectedServicesList();
+    document.getElementById('modal-title').textContent = "Editar Marcação";
+    updateServiceOptions();
+    openModal(appointmentModal);
+}
+
+function triggerEditClient(id) {
+    const client = state.clients.find(c => c.id == id);
+    if (!client) return;
+    document.getElementById('client-id').value = client.id;
+    document.getElementById('client-name').value = client.name;
+    document.getElementById('client-phone').value = client.phone || '';
+    document.getElementById('client-observations').value = client.observations || '';
+    openModal(clientModal);
+}
+
+function triggerEditService(id) {
+    const service = state.services.find(s => s.id == id);
+    if (!service) return;
+    document.getElementById('service-id').value = service.id;
+    document.getElementById('service-name').value = service.name;
+    document.getElementById('service-price').value = service.price;
+    document.getElementById('service-modal-title').textContent = "Editar Serviço";
+    openModal(serviceModal);
+}
+
+function triggerMessage(name, time) {
+    const client = state.clients.find(c => c.name === name);
+    document.getElementById('msg-recipient').value = name;
+    document.getElementById('msg-phone-hidden').value = client ? client.phone : '';
+    const hourLabel = time || '[Hora]';
+    const firstName = name ? name.split(' ')[0] : '[Nome]';
+    document.getElementById('msg-content').value = `Olá, ${firstName}! ✨\nAqui é a Nélia a relembrar que tem marcação amanhã às ${hourLabel}.\nSe não conseguir comparecer, agradeço que me avise.\nMuito obrigada\nAté breve! 😊`;
+    openModal(messageModal);
+}
+
+function updateServiceOptions() {
+    const inputType = document.getElementById('appt-type');
+    if (!inputType) return;
+    inputType.innerHTML = '<option value="" disabled selected>Adicionar serviço...</option>' + state.services.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
+}
 
 function renderSelectedServicesList() {
     const container = document.getElementById('selected-services-container');
-    if (container) container.innerHTML = selectedServices.map((s, i) => `<span class="tag" style="background:#eee; padding:2px 8px; border-radius:10px; margin:2px; display:inline-block;">${s} <i onclick="removeServiceFromAppt(${i})" style="cursor:pointer">&times;</i></span>`).join('');
+    if (container) container.innerHTML = selectedServices.map((s, i) => `<div style="background:var(--accent-light); padding:4px 12px; border-radius:20px; font-size:0.85rem; display:flex; align-items:center; gap:8px;">${s} <i class="ph ph-x" onclick="removeServiceFromAppt(${i})" style="cursor:pointer"></i></div>`).join('');
 }
 window.removeServiceFromAppt = (i) => { selectedServices.splice(i, 1); renderSelectedServicesList(); };
 
-// Inicialização Final
+function showNotification(msg) {
+    const container = document.getElementById('notification-container');
+    if (!container) return;
+    const toast = document.createElement('div'); toast.className = 'toast';
+    toast.innerHTML = `<i class="ph ph-check-circle"></i><span>${msg}</span>`;
+    container.appendChild(toast);
+    setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
+}
+
+// 9. Startup & Form Listeners
 document.addEventListener('DOMContentLoaded', () => {
     initDOMElements();
-    
-    // Navegação
-    document.querySelectorAll('.nav-item').forEach(btn => {
-        btn.onclick = () => {
-            document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            state.currentView = btn.dataset.view;
-            refreshCurrentView();
-        }
-    });
+    initNavigation();
+    setupEventDelegation();
 
-    // Close Modals
-    document.querySelectorAll('.close-modal, .close-modal-btn').forEach(b => b.onclick = closeModals);
+    document.querySelectorAll('.close-modal, .close-modal-btn, .close-client-btn, .close-service-btn, .close-msg-btn').forEach(b => b.onclick = closeModals);
+    modalOverlay.onclick = (e) => { if (e.target === modalOverlay) closeModals(); };
 
-    // Form Submits
+    document.getElementById('btn-new-appointment').onclick = () => {
+        document.getElementById('appointment-form').reset();
+        document.getElementById('appt-id').value = '';
+        selectedServices = [];
+        renderSelectedServicesList();
+        document.getElementById('modal-title').textContent = "Nova Marcação";
+        document.getElementById('appt-date').value = new Date().toISOString().split('T')[0];
+        updateServiceOptions();
+        openModal(appointmentModal);
+    };
+
+    document.getElementById('btn-new-service').onclick = () => {
+        document.getElementById('service-form').reset();
+        document.getElementById('service-id').value = '';
+        document.getElementById('service-modal-title').textContent = "Novo Serviço";
+        openModal(serviceModal);
+    };
+
+    document.getElementById('btn-new-client').onclick = () => {
+        document.getElementById('client-form').reset();
+        document.getElementById('client-id').value = '';
+        openModal(clientModal);
+    };
+
     document.getElementById('appointment-form').onsubmit = async (e) => {
         e.preventDefault();
         const id = document.getElementById('appt-id').value;
@@ -303,36 +523,84 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 0)
         };
         if(id) {
-            const idx = state.appointments.findIndex(x => x.id == id);
-            state.appointments[idx] = newAppt;
+            const idx = state.appointments.findIndex(a => a.id == id);
+            if(idx !== -1) state.appointments[idx] = newAppt;
         } else {
             state.appointments.push(newAppt);
         }
-        await saveState();
-        closeModals();
-        refreshCurrentView();
+        await saveState(); closeModals(); refreshCurrentView(); showNotification('Guardado!');
+    };
+
+    document.getElementById('client-form').onsubmit = async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('client-id').value;
+        const cData = {
+            id: id || Date.now(),
+            name: document.getElementById('client-name').value,
+            phone: document.getElementById('client-phone').value,
+            observations: document.getElementById('client-observations').value
+        };
+        if(id) {
+            const idx = state.clients.findIndex(c => c.id == id);
+            if(idx !== -1) state.clients[idx] = cData;
+        } else {
+            state.clients.push(cData);
+        }
+        await saveState(); closeModals(); refreshCurrentView(); showNotification('Cliente Guardado!');
+    };
+
+    document.getElementById('service-form').onsubmit = async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('service-id').value;
+        const sData = {
+            id: id || Date.now(),
+            name: document.getElementById('service-name').value,
+            price: document.getElementById('service-price').value
+        };
+        if(id) {
+            const idx = state.services.findIndex(s => s.id == id);
+            if(idx !== -1) state.services[idx] = sData;
+        } else {
+            state.services.push(sData);
+        }
+        await saveState(); closeModals(); refreshCurrentView(); showNotification('Serviço Guardado!');
     };
 
     document.getElementById('btn-add-service-to-appt').onclick = () => {
         const val = document.getElementById('appt-type').value;
-        if(val && !selectedServices.includes(val)) {
-            selectedServices.push(val);
-            renderSelectedServicesList();
-        }
+        if(val && !selectedServices.includes(val)) { selectedServices.push(val); renderSelectedServicesList(); }
     };
 
-    // Populando datalists
-    const apptType = document.getElementById('appt-type');
-    if(apptType) apptType.innerHTML = state.services.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
+    document.getElementById('btn-send-whatsapp').onclick = () => {
+        const phone = document.getElementById('msg-phone-hidden').value.replace(/\D/g, '');
+        if(phone) window.open(`https://wa.me/${phone}?text=${encodeURIComponent(document.getElementById('msg-content').value)}`, '_blank');
+        else showNotification('Sem telefone');
+    };
+
+    document.getElementById('btn-send-sms').onclick = () => {
+        const phone = document.getElementById('msg-phone-hidden').value.replace(/\D/g, '');
+        if(phone) window.location.href = `sms:${phone}?&body=${encodeURIComponent(document.getElementById('msg-content').value)}`;
+        else showNotification('Sem telefone');
+    };
 
     initializeData();
 });
 
-// Funções globais de Backup
 window.downloadBackup = () => {
     const blob = new Blob([JSON.stringify(state, null, 2)], {type: 'application/json'});
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'backup_agenda.json';
-    a.click();
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'backup_agenda.json'; a.click();
+};
+
+window.uploadBackup = () => {
+    const input = document.createElement('input'); input.type = 'file'; input.accept = '.json';
+    input.onchange = async (e) => {
+        const file = e.target.files[0]; if(!file) return;
+        const reader = new FileReader();
+        reader.onload = async (ev) => {
+            const data = JSON.parse(ev.target.result);
+            if(data.clients && data.appointments) { state = data; await saveState(); refreshCurrentView(); showNotification('Restaurado!'); }
+        };
+        reader.readAsText(file);
+    };
+    input.click();
 };
