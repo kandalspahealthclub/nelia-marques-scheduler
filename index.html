@@ -229,7 +229,17 @@
         </div>
 
         <!-- Confirm Modal -->
-
+        <div class="modal" id="confirm-modal" style="max-width: 400px; text-align: center; padding: 2rem;">
+            <div style="margin-bottom: 1.5rem;">
+                <i class="ph ph-warning-circle" style="font-size: 3.5rem; color: var(--danger);"></i>
+            </div>
+            <h3 style="margin-bottom: 1rem; font-family: var(--font-heading);">Confirmar</h3>
+            <p id="confirm-msg" style="color: var(--text-secondary); margin-bottom: 2rem;">Tem a certeza que deseja eliminar?</p>
+            <div style="display: flex; gap: 1rem; justify-content: center;">
+                <button type="button" class="btn btn-ghost" id="confirm-no" style="flex: 1;">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="confirm-yes" style="flex: 1; background: var(--danger);">Eliminar</button>
+            </div>
+        </div>
 
     </div>
 

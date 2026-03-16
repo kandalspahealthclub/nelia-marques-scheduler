@@ -491,6 +491,41 @@ function showNotification(msg) {
     setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
 }
 
+async function brandedConfirm(message) {
+    return new Promise((resolve) => {
+        const modal = document.getElementById('confirm-modal');
+        const overlay = document.getElementById('modal-overlay');
+        const msgEl = document.getElementById('confirm-msg');
+        const btnYes = document.getElementById('confirm-yes');
+        const btnNo = document.getElementById('confirm-no');
+
+        if (!modal || !overlay) {
+            resolve(window.confirm(message));
+            return;
+        }
+
+        msgEl.textContent = message;
+        
+        const cleanup = (result) => {
+            btnYes.onclick = null;
+            btnNo.onclick = null;
+            modal.style.display = 'none';
+            overlay.classList.remove('open');
+            setTimeout(() => { overlay.style.display = 'none'; }, 200);
+            resolve(result);
+        };
+
+        btnYes.onclick = () => cleanup(true);
+        btnNo.onclick = () => cleanup(false);
+
+        // Abrir
+        document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
+        modal.style.display = 'block';
+        modalOverlay.classList.add('open');
+        modalOverlay.style.display = 'flex';
+    });
+}
+
 // 9. Startup & Form Listeners
 document.addEventListener('DOMContentLoaded', () => {
     initDOMElements();
