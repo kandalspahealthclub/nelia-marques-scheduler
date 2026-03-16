@@ -16,11 +16,28 @@ const defaultState = {
     messages: []
 };
 
-// NetworkSync State Management
+// Firebase Configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyACxo7xuXIVlCnGvGE_QetIbWhyB6V73PM",
+  authDomain: "nelia-marques-scheduler.firebaseapp.com",
+  databaseURL: "https://nelia-marques-scheduler-default-rtdb.firebaseio.com",
+  projectId: "nelia-marques-scheduler",
+  storageBucket: "nelia-marques-scheduler.firebasestorage.app",
+  messagingSenderId: "898663480243",
+  appId: "1:898663480243:web:1690883d4bd926ac2229c6",
+  measurementId: "G-6G7N5J5VPN"
+};
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const stateRef = db.ref('state');
+
+// State Management
 let state = JSON.parse(JSON.stringify(defaultState));
 let isSaving = false;
 let isPendingSave = false;
-let selectedServices = []; // Temporary storage for services in the current modal
+let selectedServices = [];
 
 // Create a small sync indicator in the UI
 function updateSyncStatus(status) {
@@ -33,13 +50,13 @@ function updateSyncStatus(status) {
     }
 
     if (status === 'saving') {
-        indicator.innerHTML = '<i class="ph-fill ph-circle-notch ph-spin" style="color:var(--accent);"></i> Salvando...';
+        indicator.innerHTML = '<i class="ph-fill ph-circle-notch ph-spin" style="color:var(--accent);"></i> Gravando na Nuvem...';
         indicator.style.opacity = '1';
     } else if (status === 'synced') {
-        indicator.innerHTML = '<i class="ph-fill ph-check-circle" style="color:var(--success);"></i> Sincronizado';
-        setTimeout(() => { if (!isSaving && !isPendingSave) indicator.style.opacity = '0'; }, 2000);
+        indicator.innerHTML = '<i class="ph-fill ph-check-circle" style="color:var(--success);"></i> Nuvem Sincronizada';
+        setTimeout(() => { if (!isSaving && !isPendingSave) indicator.style.opacity = '0'; }, 3000);
     } else if (status === 'error') {
-        indicator.innerHTML = '<i class="ph-fill ph-warning-circle" style="color:var(--danger);"></i> Erro de sincronização';
+        indicator.innerHTML = '<i class="ph-fill ph-warning-circle" style="color:var(--danger);"></i> Erro na Conexão';
         indicator.style.opacity = '1';
     }
 }
@@ -48,99 +65,55 @@ function brandedConfirm(message) {
     return Promise.resolve(confirm(message));
 }
 
+// Initial Data Loading via Firebase
 async function initializeData() {
-    try {
-        const response = await fetch('/api/state');
-        if (response.ok) {
-            state = await response.json();
-            updateSyncStatus('synced');
-        } else {
-            console.warn("Server offline, using default/local");
-            state = { ...defaultState };
+    updateSyncStatus('saving');
+    
+    stateRef.on('value', (snapshot) => {
+        const val = snapshot.val();
+        
+        // If the database is empty, initialize with defaultState
+        if (!val) {
+            saveState(); // Writes defaultState to Firebase
+            return;
         }
-    } catch (e) {
-        console.error("Failed to fetch state:", e);
-        state = { ...defaultState };
-    }
 
-    state.appointments = state.appointments || [];
-    state.clients = state.clients || [];
-    // Data Cleanup: Remove duplicates by ID
-    const uniqueClients = [];
-    const seenIds = new Set();
-    state.clients.forEach(c => {
-        if (!seenIds.has(c.id)) {
-            uniqueClients.push(c);
-            seenIds.add(c.id);
-        }
+        // Overwrite protection: Don't update if user is in a modal
+        if (document.querySelector('.modal-overlay.open') || isSaving || isPendingSave) return;
+
+        console.log("Syncing from Cloud...");
+        const activeView = state.currentView;
+        const activeMonth = state.selectedReportMonth;
+        const activeArchive = state.showArchive;
+        
+        state = val;
+        
+        // Restore local UI state
+        state.currentView = activeView;
+        state.selectedReportMonth = activeMonth;
+        state.showArchive = activeArchive;
+
+        refreshCurrentView();
+        updateSyncStatus('synced');
     });
-    state.clients = uniqueClients;
-
-    state.services = state.services || [];
-    state.messages = state.messages || [];
-    state.currentView = state.currentView || 'dashboard';
-
-    refreshCurrentView();
-    startPolling();
 }
 
-// Debounce save to avoid flooding server
-let saveTimeout;
 function saveState() {
     isPendingSave = true;
     updateSyncStatus('saving');
-    clearTimeout(saveTimeout);
-    saveTimeout = setTimeout(async () => {
-        isSaving = true;
-        try {
-            await fetch('/api/state', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(state)
-            });
+    
+    // Using Firebase set() for the entire state
+    stateRef.set(state)
+        .then(() => {
             isPendingSave = false;
-            isSaving = false;
             updateSyncStatus('synced');
-            console.log("State synced");
-        } catch (e) {
-            isSaving = false;
+            console.log("Cloud Save Successful");
+        })
+        .catch((error) => {
+            isPendingSave = false;
             updateSyncStatus('error');
-            console.error("Sync failed:", e);
-        }
-    }, 800);
-}
-
-// Polling for updates from other devices
-function startPolling() {
-    setInterval(async () => {
-        // CRITICAL: Overwrite protection
-        // Don't poll if:
-        // 1. A modal is open (user might be typing)
-        // 2. A save is currently in progress or waiting to be sent
-        if (document.querySelector('.modal-overlay.open') || isSaving || isPendingSave) return;
-
-        try {
-            const response = await fetch('/api/state?nocache=' + Date.now());
-            if (response.ok) {
-                const serverState = await response.json();
-
-                // If the user started a save/opened modal while we were fetching, abort the update
-                if (document.querySelector('.modal-overlay.open') || isSaving || isPendingSave) return;
-
-                if (JSON.stringify(serverState) !== JSON.stringify(state)) {
-                    const activeView = state.currentView;
-                    const activeMonth = state.selectedReportMonth;
-                    const activeArchive = state.showArchive;
-                    state = serverState;
-                    state.currentView = activeView;
-                    state.selectedReportMonth = activeMonth;
-                    state.showArchive = activeArchive;
-                    refreshCurrentView();
-                    updateSyncStatus('synced');
-                }
-            }
-        } catch (e) { }
-    }, 3000); // Check every 3 seconds to be slightly less aggressive
+            console.error("Cloud Save Failed:", error);
+        });
 }
 
 initializeData();

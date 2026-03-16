@@ -1,0 +1,1311 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Nélia Marques</title>
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <style>
+        @media screen {
+            .no-screen {
+                display: none !important;
+            }
+        }
+
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+        }
+
+        /* ---------------- PREMIUM MOBILE CSS ---------------- */
+        :root {
+            --bg-app: #f8fafc;
+            --bg-sidebar: #ffffff;
+            --bg-card: #ffffff;
+            --bg-hover: #f1f5f9;
+            --text-primary: #0f172a;
+            --text-secondary: #64748b;
+            --text-tertiary: #94a3b8;
+            --accent: #6366f1;
+            --accent-hover: #4f46e5;
+            --accent-light: #f5f3ff;
+            --accent-text: #4338ca;
+            --rose: #f43f5e;
+            --emerald: #10b981;
+            --amber: #f59e0b;
+            --border-color: #e2e8f0;
+            --radius: 12px;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --sidebar-width: 240px;
+            --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-app);
+            color: var(--text-primary);
+            height: 100vh;
+            overflow: hidden;
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        .app-container {
+            display: flex;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            padding: 2rem 1rem;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            z-index: 900;
+        }
+
+        .brand {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+
+        .sidebar-logo {
+            max-width: 120px;
+            height: auto;
+            object-fit: contain;
+        }
+
+        .nav-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            flex: 1;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            border-radius: var(--radius);
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s;
+        }
+
+        .nav-item:hover,
+        .nav-item.active {
+            background-color: var(--accent-light);
+            color: var(--accent-text);
+            font-weight: 600;
+        }
+
+        .main-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 2rem;
+            width: 100%;
+            position: relative;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.25rem;
+            border-radius: var(--radius);
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: all 0.2s;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        .btn-primary {
+            background-color: var(--accent);
+            color: white;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: var(--accent-light);
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .stat-info .value {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .stat-info .label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .appointment-item {
+            display: flex;
+            align-items: center;
+            padding: 0.85rem 1rem;
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            margin-bottom: 0.75rem;
+            gap: 0.85rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .appointment-item:active {
+            transform: scale(0.98);
+            box-shadow: none;
+        }
+
+        .appointment-item::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 25%;
+            bottom: 25%;
+            width: 3px;
+            border-radius: 0 4px 4px 0;
+            background: var(--accent);
+            opacity: 0.8;
+        }
+
+        .appt-time {
+            font-weight: 700;
+            font-size: 0.8rem;
+            background: var(--accent-light);
+            padding: 0.35rem 0.6rem;
+            border-radius: 10px;
+            color: var(--accent-text);
+            min-width: 60px;
+            text-align: center;
+            letter-spacing: -0.01em;
+            box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.1);
+        }
+
+        .client-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--accent) 0%, #a855f7 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.85rem;
+            flex-shrink: 0;
+            box-shadow: 0 4px 10px rgba(99, 102, 241, 0.2);
+        }
+
+        .service-icon-box {
+            width: 38px;
+            height: 38px;
+            border-radius: 12px;
+            background: #f0fdf4;
+            color: #16a34a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+
+        .client-name {
+            font-weight: 700;
+            font-size: 0.95rem;
+            display: block;
+            color: var(--text-primary);
+            letter-spacing: -0.01em;
+        }
+
+        .appt-type {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .appt-actions button {
+            padding: 0.4rem 0.65rem;
+            border: none;
+            background: var(--bg-hover);
+            border-radius: 8px;
+            font-weight: 700;
+            color: var(--text-secondary);
+            margin-left: 0.4rem;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+        }
+
+        .appt-actions button:active {
+            background: var(--accent-light);
+            color: var(--accent-text);
+        }
+
+        /* MODAL */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .modal-overlay.open {
+            display: flex;
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        @keyframes popIn {
+            from {
+                opacity: 0;
+                transform: scale(0.8) translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .popup-modal {
+            border: none !important;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+        }
+
+        .modal-overlay.open .popup-modal {
+            display: block !important;
+            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .modal {
+            width: 100%;
+            max-width: 450px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            max-height: 90vh;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .modal-header {
+            padding: 1.25rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        /* COMPACT TEXTAREA for iPhone */
+        .form-group textarea {
+            height: 100px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 16px;
+            background: white;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .close-modal {
+            background: var(--bg-hover);
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+        }
+
+        .toast {
+            background: #1e293b;
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border-radius: 50px;
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 3000;
+            font-weight: 500;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0
+            }
+
+            to {
+                opacity: 1
+            }
+        }
+
+        /* MOBILE RESPONSIVE TWEAKS */
+        @media (max-width: 768px) {
+            .app-container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                width: 100%;
+                height: auto;
+                flex-direction: row;
+                padding: 0.5rem;
+                border-top: 1px solid var(--border-color);
+                justify-content: space-around;
+                background: white;
+                box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.05);
+                padding-bottom: max(10px, env(safe-area-inset-bottom));
+            }
+
+            .brand,
+            .user-profile {
+                display: none !important;
+            }
+
+            .nav-menu {
+                flex-direction: row;
+                width: 100%;
+                justify-content: space-around;
+            }
+
+            .nav-item {
+                flex-direction: column;
+                padding: 0.5rem;
+                gap: 4px;
+                font-size: 0.75rem;
+                text-align: center;
+                border-radius: 8px;
+                color: var(--text-tertiary);
+                font-weight: 500;
+                min-width: 60px;
+            }
+
+            .nav-item i {
+                font-size: 1.5rem;
+                margin: 0 !important;
+                display: block;
+                margin-bottom: 2px !important;
+            }
+
+            .nav-item.active {
+                background: transparent;
+                color: var(--accent);
+            }
+
+            /* Hide Text Labels on very small screens if needed, but here we style perfectly */
+
+            .main-content {
+                padding: 1.25rem;
+                padding-bottom: 100px;
+            }
+
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+
+            /* Card Mobile */
+            .appointment-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+                padding: 1.25rem;
+            }
+
+            .appt-time {
+                align-self: flex-start;
+                margin-bottom: 0.25rem;
+            }
+
+            .appt-actions {
+                width: 100%;
+                display: flex;
+                gap: 0.5rem;
+                margin-top: 0.5rem;
+            }
+
+            .appt-actions button {
+                flex: 1;
+                margin: 0;
+                padding: 0.75rem;
+                justify-content: center;
+            }
+        }
+
+        /* --- SHARED REPORT STYLES --- */
+        .report-header-professional {
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 5px;
+            border-bottom: 1px solid #000 !important;
+            padding-bottom: 5px;
+            text-align: left;
+        }
+
+        .report-label {
+            font-size: 9pt;
+            text-transform: uppercase;
+            color: #666;
+        }
+
+        .report-value {
+            font-size: 14pt;
+            font-weight: bold;
+            margin-top: 3px;
+            color: #000;
+        }
+
+        .report-row {
+            display: flex !important;
+            width: 100% !important;
+            padding: 6pt 0 !important;
+            border-bottom: 0.5pt solid #eee !important;
+        }
+
+        .table-header {
+            display: flex !important;
+            width: 100% !important;
+            border-top: 1.5pt solid #000 !important;
+            border-bottom: 1.5pt solid #000 !important;
+            font-weight: bold;
+            padding: 6pt 0 !important;
+        }
+
+        .col-service {
+            width: 60% !important;
+            text-align: left;
+        }
+
+        .col-qty {
+            width: 15% !important;
+            text-align: center;
+        }
+
+        .col-total {
+            width: 25% !important;
+            text-align: right;
+        }
+
+        /* --- MINIMALIST PRINT STYLES FOR PDF --- */
+        @media print {
+            body {
+                background: white !important;
+                color: #000 !important;
+                font-family: serif !important;
+                /* Elegant look for PDF */
+                margin: 0;
+                padding: 0;
+            }
+
+            .sidebar,
+            .top-bar,
+            .no-print,
+            .report-controls,
+            .appt-actions,
+            .btn,
+            #mobile-search-container,
+            .client-avatar {
+                display: none !important;
+            }
+
+            .main-content {
+                margin: 0 !important;
+                padding: 30px !important;
+                width: 100% !important;
+                background: white !important;
+                overflow: visible !important;
+            }
+
+            .report-signature {
+                display: block !important;
+                margin-top: 60px;
+                text-align: center;
+            }
+
+            * {
+                color: #000 !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="brand">
+                <img src="logo.png" alt="Logo" class="sidebar-logo">
+            </div>
+            <nav class="nav-menu">
+                <button class="nav-item active" data-view="dashboard">Painel</button>
+                <button class="nav-item" data-view="calendar">Agenda</button>
+                <button class="nav-item" data-view="clients">Clientes</button>
+                <button class="nav-item" data-view="services">Serviços</button>
+                <button class="nav-item" data-view="reports">Relatórios</button>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <header class="top-bar">
+                <h1 id="page-title">Painel</h1>
+                <div class="actions">
+                    <button class="btn btn-primary" id="btn-new-appointment"><i class="ph ph-plus"></i> Novo</button>
+                    <button class="btn btn-primary" id="btn-new-service" style="display: none;"><i
+                            class="ph ph-plus"></i> Serviço</button>
+                    <button class="btn btn-primary" id="btn-new-client" style="display: none;"><i
+                            class="ph ph-plus"></i> Cliente</button>
+                    <button class="btn btn-primary" id="btn-print-report" style="display: none; background: #64748b;"><i
+                            class="ph ph-file-pdf"></i> PDF</button>
+                </div>
+            </header>
+            <div id="mobile-search-container" style="display: none; padding: 12px 1.25rem; background: var(--bg-app);">
+                <div
+                    style="position: relative; display: flex; align-items: center; background: white; border-radius: 12px; box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); overflow: hidden;">
+                    <i class="ph ph-magnifying-glass"
+                        style="position: absolute; left: 12px; color: var(--text-tertiary);"></i>
+                    <input type="text" id="mobile-client-search" placeholder="Pesquisar clientes..."
+                        style="width: 100%; padding: 12px 12px 12px 42px; border: none; font-size: 1rem; outline: none;">
+                </div>
+            </div>
+            <div id="content-area"></div>
+        </main>
+    </div>
+
+    <!-- MODAL -->
+    <div class="modal-overlay" id="modal-overlay">
+        <div class="modal" id="generic-modal" style="display:block;">
+            <div class="modal-header">
+                <h3 id="modal-title-text">Modal</h3>
+                <button class="close-modal"><i class="ph ph-x"></i></button>
+            </div>
+            <div class="modal-body" id="modal-content-body"></div>
+        </div>
+    </div>
+
+
+    <div id="notification-container"></div>
+
+    <script>
+        // ---------------- JAVASCRIPT COMPATIBLE MODE ----------------
+        var defaultState = {
+            appointments: [],
+            clients: [{ id: 1, name: "Sarah Connor", phone: "11999999991" }, { id: 2, name: "John Wick", phone: "11999999992" }],
+            services: [{ id: 1, name: "Consulta", duration: 30, price: 150 }],
+            messages: []
+        };
+        var state = JSON.parse(JSON.stringify(defaultState));
+        var selectedServicesMobile = []; // Temporary storage for services in the current modal
+        // Cache Buster v8.1
+        var APP_VERSION = '8.1';
+        if (localStorage.getItem('app_ver') !== APP_VERSION) {
+            localStorage.setItem('app_ver', APP_VERSION);
+            // Optional: force reload logic or just let natural cache expire
+        }
+
+        // Network Sync
+        function initializeData() {
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', '/api/state', true);
+            xhr.onload = function () {
+                if (xhr.status === 200) {
+                    try {
+                        state = JSON.parse(xhr.responseText);
+                        state.clients = state.clients || [];
+                        var unique = [];
+                        var seen = new Set();
+                        state.clients.forEach(function (c) {
+                            if (c.id && !seen.has(c.id)) { unique.push(c); seen.add(c.id); }
+                        });
+                        state.clients = unique;
+                    } catch (e) { }
+                }
+                refreshView();
+                startPolling();
+            };
+            xhr.send();
+        }
+
+        var isSaving = false;
+        var isPendingSave = false;
+
+        function updateSyncStatus(status) {
+            var indicator = document.getElementById('sync-indicator');
+            if (!indicator) {
+                indicator = document.createElement('div');
+                indicator.id = 'sync-indicator';
+                indicator.style = 'position:fixed; bottom:80px; left:50%; transform:translateX(-50%); font-size:0.7rem; color:white; background:rgba(0,0,0,0.7); padding:4px 12px; border-radius:20px; z-index:9999; pointer-events:none; transition: opacity 0.3s;';
+                document.body.appendChild(indicator);
+            }
+            if (status === 'saving') { indicator.innerHTML = 'Salvando...'; indicator.style.opacity = '1'; }
+            else if (status === 'synced') { indicator.innerHTML = 'Sincronizado'; setTimeout(function () { if (!isSaving && !isPendingSave) indicator.style.opacity = '0'; }, 2000); }
+            else if (status === 'error') { indicator.innerHTML = 'Erro ao salvar'; indicator.style.opacity = '1'; }
+        }
+
+        function saveState() {
+            isPendingSave = true;
+            updateSyncStatus('saving');
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', '/api/state', true);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.onload = function () {
+                isSaving = false;
+                isPendingSave = false;
+                updateSyncStatus('synced');
+            };
+            xhr.onerror = function () { isSaving = false; isPendingSave = false; updateSyncStatus('error'); };
+            isSaving = true;
+            xhr.send(JSON.stringify(state));
+        }
+
+        function startPolling() {
+            setInterval(function () {
+                if (document.querySelector('.modal-overlay.open') || isSaving || isPendingSave) return;
+                var xhr = new XMLHttpRequest();
+                xhr.open('GET', '/api/state?t=' + Date.now(), true);
+                xhr.onload = function () {
+                    if (xhr.status === 200) {
+                        if (document.querySelector('.modal-overlay.open') || isSaving || isPendingSave) return;
+                        var s = JSON.parse(xhr.responseText);
+                        if (JSON.stringify(s) !== JSON.stringify(state)) {
+                            var v = state.currentView;
+                            var m = state.selectedReportMonth;
+                            state = s;
+                            state.currentView = v;
+                            state.selectedReportMonth = m;
+                            refreshView();
+                            updateSyncStatus('synced');
+                        }
+                    }
+                };
+                xhr.send();
+            }, 3000);
+        }
+
+        // DOM
+        var contentArea = document.getElementById('content-area');
+        var pageTitle = document.getElementById('page-title');
+        var navItems = document.querySelectorAll('.nav-item');
+        var modalOverlay = document.getElementById('modal-overlay');
+        var btnNewAppt = document.getElementById('btn-new-appointment');
+        var btnNewService = document.getElementById('btn-new-service');
+        var btnNewClient = document.getElementById('btn-new-client');
+
+        // ICONS & NAV
+        var navIcons = { 'dashboard': 'ph-squares-four', 'calendar': 'ph-calendar-blank', 'clients': 'ph-users', 'services': 'ph-briefcase', 'reports': 'ph-chart-pie' };
+        // Mobile Nav Icon Fix: Insert Icon structured for column layout
+        for (var i = 0; i < navItems.length; i++) {
+            (function (item) {
+                var view = item.dataset.view;
+                // Clean Text
+                var text = item.innerText;
+                item.innerHTML = '<i class="ph ' + navIcons[view] + '"></i><span>' + text + '</span>';
+                item.onclick = function () { state.currentView = view; refreshView(); };
+            })(navItems[i]);
+        }
+
+        state.currentView = 'dashboard';
+        initializeData();
+
+        function refreshView() {
+            for (var i = 0; i < navItems.length; i++) {
+                var n = navItems[i];
+                if (n.dataset.view === state.currentView) n.classList.add('active'); else n.classList.remove('active');
+            }
+
+            // Explicit Visibility Logic
+            var v = state.currentView;
+            if (btnNewAppt) btnNewAppt.style.display = (v === 'calendar') ? 'inline-flex' : 'none';
+            if (btnNewService) btnNewService.style.display = (v === 'services') ? 'inline-flex' : 'none';
+            if (btnNewClient) btnNewClient.style.display = (v === 'clients') ? 'inline-flex' : 'none';
+            var btnPrint = document.getElementById('btn-print-report');
+            if (btnPrint) btnPrint.style.display = (v === 'reports') ? 'inline-flex' : 'none';
+            var mobileSearch = document.getElementById('mobile-search-container');
+            if (mobileSearch) {
+                mobileSearch.style.display = (v === 'clients' || v === 'services') ? 'block' : 'none';
+                if (mobileSearchInput) {
+                    mobileSearchInput.placeholder = (v === 'services') ? "Pesquisar serviços..." : "Pesquisar Nome ou Contacto";
+                }
+            }
+            var btnBackup = document.getElementById('btn-backup');
+            if (btnBackup) btnBackup.style.display = (v === 'dashboard') ? 'inline-flex' : 'none';
+
+            var view = state.currentView;
+            if (view === 'dashboard') renderDashboard();
+            else if (view === 'calendar') renderCalendar();
+            else if (view === 'clients') renderClients();
+            else if (view === 'services') renderServices();
+            else if (view === 'reports') renderReports();
+        }
+
+        function brandedConfirm(message, callback) {
+            callback(confirm(message));
+        }
+
+        window.downloadBackup = function () {
+            var backupData = JSON.stringify(state, null, 2);
+            var blob = new Blob([backupData], { type: 'application/json' });
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = 'backup_nelia_marques_' + new Date().toISOString().split('T')[0] + '.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            // alert('Backup concluído com sucesso!');
+            var t = document.createElement('div'); t.className = 'toast'; t.innerText = 'Backup concluído!'; document.body.appendChild(t); setTimeout(function () { t.remove() }, 3000);
+        };
+
+        function renderDashboard() {
+            pageTitle.textContent = "Painel";
+
+            var today = new Date();
+            var tomorrow = new Date();
+            tomorrow.setDate(today.getDate() + 1);
+
+            var todayStr = today.toISOString().split('T')[0];
+            var tomorrowStr = tomorrow.toISOString().split('T')[0];
+
+            var todayDisplay = today.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' });
+            var tomorrowDisplay = tomorrow.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' });
+
+            var appts = state.appointments.filter(function (a) { return a.date === todayStr; });
+            var tomorrowAppts = state.appointments.filter(function (a) { return a.date === tomorrowStr; });
+
+            var logoSrc = "logo.png?t=" + new Date().getTime();
+
+            var html = '<div class="dashboard-logo-container" style="text-align:center; padding: 1.5rem 0; background: white; margin-bottom: 1rem; border-radius: 12px; border: 1px solid #eee;">' +
+                '<img src="' + logoSrc + '" style="width:140px; height:auto; display:inline-block;" onerror="this.parentElement.innerHTML=\'<p style=\'color:red\'>Erro ao carregar logo.png</p>\'">' +
+                '</div>' +
+                '<div class="dashboard-grid">' +
+                '<div class="card"><div class="stat-icon"><i class="ph ph-trend-up"></i></div><div class="stat-info"><div class="label">Hoje</div><div class="value">' + appts.length + '</div></div></div>' +
+                '<div class="card"><div class="stat-icon"><i class="ph ph-users"></i></div><div class="stat-info"><div class="label">Total</div><div class="value">' + state.clients.length + '</div></div></div>' +
+                '</div>';
+
+            html += '<div class="section-header" style="margin-top:1.5rem;"><h3>Agenda de Hoje</h3><span class="date-badge">' + todayDisplay + '</span></div>' +
+                '<div style="margin-top:0.5rem;">' + (appts.length ? appts.map(renderApptItem).join('') : '<div style="color:#aaa;text-align:center;padding:1.5rem;">Vazio hoje.</div>') + '</div>';
+
+            html += '<div class="section-header" style="margin-top:2rem;"><h3>Previsão Amanhã</h3><span class="date-badge" style="background:var(--rose); color:white;">' + tomorrowDisplay + '</span></div>' +
+                '<div style="margin-top:0.5rem; padding-bottom: 2rem;">' + (tomorrowAppts.length ? tomorrowAppts.map(renderApptItem).join('') : '<div style="color:#aaa;text-align:center;padding:1.5rem;">Vazio amanhã.</div>') + '</div>';
+
+            contentArea.innerHTML = html;
+        }
+        function renderCalendar() {
+            pageTitle.textContent = "Agenda";
+            var today = new Date().toISOString().split('T')[0];
+            var all = state.appointments.slice().sort(function (a, b) {
+                var da = a.date + a.time || "";
+                var db = b.date + b.time || "";
+                return da.localeCompare(db);
+            });
+
+            var active = all.filter(function (a) { return a.date >= today; });
+            var past = all.filter(function (a) { return a.date < today; });
+
+            var html = '<div class="appointments-list">' + (active.length ? active.map(renderApptItem).join('') : '<div style="color:#aaa;text-align:center;padding:2rem;">Nenhum agendamento futuro.</div>') + '</div>';
+
+            if (past.length > 0) {
+                html += '<div style="margin-top:2rem;text-align:center;border-top:1px dashed #eee;padding-top:1rem;">' +
+                    '<button class="btn" style="color:#999;font-size:0.85rem;" onclick="toggleArchive()"><i class="ph ph-archive-box"></i> ' + (state.showArchive ? 'Esconder Histórico' : 'Ver Histórico (' + past.length + ')') + '</button>' +
+                    '</div>';
+                if (state.showArchive) {
+                    html += '<div class="appointments-list" style="opacity:0.6;">' + past.map(renderApptItem).join('') + '</div>';
+                }
+            }
+            contentArea.innerHTML = html;
+        }
+        window.toggleArchive = function () {
+            state.showArchive = !state.showArchive;
+            renderCalendar();
+        };
+        function renderClients() {
+            pageTitle.textContent = "Clientes";
+            var normalize = function (s) { return (s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase(); };
+            var filtered = state.clients;
+            if (state.clientSearchQueryMobile) {
+                var query = normalize(state.clientSearchQueryMobile);
+                filtered = state.clients.filter(function (c) {
+                    return normalize(c.name).indexOf(query) !== -1 ||
+                        (c.phone && normalize(c.phone).indexOf(query) !== -1);
+                });
+            }
+            if (filtered.length === 0) {
+                contentArea.innerHTML = '<div style="padding:2rem;text-align:center;color:#999;">Nenhum cliente encontrado.</div>';
+                return;
+            }
+            contentArea.innerHTML = filtered.map(function (c) {
+                var obsDisplay = (c.observations && c.observations.trim().length > 0) ? '<div style="font-size:0.8rem; color:var(--text-secondary); margin-top:6px; padding-top:4px; border-top:1px dashed #eee;">' + c.observations + '</div>' : '';
+                return '<div class="appointment-item"><div class="appt-details" style="flex:1;"><span class="client-name">' + c.name + '</span><span class="appt-type"><i class="ph ph-phone"></i> ' + (c.phone || 'Sem tel') + '</span>' + obsDisplay + '</div><div class="appt-actions"><button onclick="openMsgModal(\'' + (c.name || '') + '\',\'\')"><i class="ph ph-paper-plane-tilt"></i></button><button onclick="editClient(' + c.id + ')" style="color:var(--accent);"><i class="ph ph-pencil-simple"></i></button><button onclick="del(\'client\',' + c.id + ')" style="color:var(--rose);"><i class="ph ph-trash"></i></button></div></div>';
+            }).join('');
+        }
+        function renderServices() {
+            pageTitle.textContent = "Serviços";
+            var normalize = function (s) { return (s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase(); };
+            var filtered = state.services;
+            if (state.serviceSearchQueryMobile) {
+                var query = normalize(state.serviceSearchQueryMobile);
+                filtered = state.services.filter(function (s) {
+                    return normalize(s.name).indexOf(query) !== -1;
+                });
+            }
+            if (filtered.length === 0) {
+                contentArea.innerHTML = '<div style="padding:2rem;text-align:center;color:#999;">Nenhum serviço encontrado.</div>';
+                return;
+            }
+            contentArea.innerHTML = filtered.map(function (s) {
+                return '<div class="appointment-item"><div class="service-icon-box"><i class="ph ph-scissors"></i></div><div class="appt-details" style="flex:1;"><span class="client-name">' + s.name + '</span><span class="appt-type"><i class="ph ph-tag"></i> €' + s.price + '</span></div><div class="appt-actions"><button onclick="del(\'service\',' + s.id + ')" style="color:var(--rose);"><i class="ph ph-trash"></i></button></div></div>';
+            }).join('');
+        }
+        function renderMessages() {
+            pageTitle.textContent = "Mensagens";
+            contentArea.innerHTML = state.messages.slice().reverse().map(function (m) {
+                return '<div class="appointment-item"><div class="appt-details" style="flex:1;"><span class="client-name">Para: ' + m.to + '</span><span class="appt-type">' + m.method + ' • ' + m.date + '</span><div style="font-size:0.85rem;margin-top:4px;">' + m.content + '</div></div><div class="appt-actions"><button onclick="del(\'message\',' + m.id + ')" style="color:red;"><i class="ph ph-trash"></i></button></div></div>';
+            }).join('');
+        }
+        function renderReports() {
+            pageTitle.textContent = "Relatórios";
+            if (!state.selectedReportMonth) {
+                state.selectedReportMonth = new Date().toISOString().substring(0, 7);
+            }
+            var selectedMonth = state.selectedReportMonth;
+            var monthAppts = state.appointments.filter(function (a) { return a.date.indexOf(selectedMonth) === 0; });
+
+            var summary = {};
+            var total = 0;
+
+            monthAppts.forEach(function (a) {
+                var p = 0;
+                if (a.price !== undefined) {
+                    p = parseFloat(a.price);
+                } else {
+                    var s = state.services.find(function (sv) { return sv.name === a.type; });
+                    p = s ? parseFloat(s.price) : 0;
+                }
+
+                if (!summary[a.type]) summary[a.type] = { count: 0, revenue: 0 };
+                summary[a.type].count++;
+                summary[a.type].revenue += p;
+                total += p;
+            });
+
+            var displayDate = new Date(selectedMonth + '-01');
+            var monthName = displayDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+
+            var html = '<div class="report-controls no-print" style="margin-bottom: 1.5rem; padding: 1rem; background: #fff; border-radius: 12px; border: 1px solid var(--border-color);">' +
+                '<label style="display:block; font-size:0.8rem; font-weight:600; color:#666; margin-bottom:8px;">Mês de Referência:</label>' +
+                '<input type="month" id="mobile-report-month" value="' + selectedMonth + '" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; font-family:inherit;">' +
+                '<button class="btn" onclick="downloadBackup()" style="width:100%; margin-top:10px; background:#f8fafc; color:#64748b; border:1px solid #e2e8f0; font-size:0.9rem;"><i class="ph ph-cloud-arrow-down"></i> Fazer Backup de Segurança</button>' +
+                '</div>' +
+                '<div id="printable-report" class="report-paper">' +
+                '  <div class="report-header-professional no-screen">' +
+                '    <img src="logo.png" style="width: 70px; height: auto; margin: 0;">' +
+                '    <div class="report-header-text">' +
+                '       <h1>RELATÓRIO MENSAL</h1>' +
+                '       <p>Referente a ' + monthName + '</p>' +
+                '    </div>' +
+                '  </div>' +
+                '  <div class="report-dashboard-grid">' +
+                '    <div class="card report-summary-item">' +
+                '       <div class="report-label">Faturamento Total</div>' +
+                '       <div class="report-value">€ ' + total.toFixed(2) + '</div>' +
+                '    </div>' +
+                '    <div class="card report-summary-item">' +
+                '       <div class="report-label">Atendimentos</div>' +
+                '       <div class="report-value">' + monthAppts.length + '</div>' +
+                '    </div>' +
+                '  </div>' +
+                '  <div class="card report-details-card">' +
+                '    <div class="report-details-header">Detalhes dos Serviços (v3)</div>' +
+                '    <div class="report-table">' +
+                '       <div class="table-header">' +
+                '           <div class="col-service">Serviço</div>' +
+                '           <div class="col-qty">Qtd</div>' +
+                '           <div class="col-total">Total</div>' +
+                '       </div>';
+
+            var keys = Object.keys(summary);
+            if (keys.length > 0) {
+                keys.forEach(function (k) {
+                    html += '<div class="report-row">' +
+                        '<div class="col-service">' + k + '</div>' +
+                        '<div class="col-qty">' + summary[k].count + '</div>' +
+                        '<div class="col-total" style="font-weight:600;">€ ' + summary[k].revenue.toFixed(2) + '</div>' +
+                        '</div>';
+                });
+            } else {
+                html += '<div style="padding:2rem; text-align:center; color:#999;">Sem dados.</div>';
+            }
+            html += '</div></div>' +
+                '  <div class="report-signature no-screen">' +
+                '  </div>' +
+                '</div>';
+            contentArea.innerHTML = html;
+
+            document.getElementById('mobile-report-month').onchange = function (e) {
+                state.selectedReportMonth = e.target.value;
+                saveState();
+                renderReports();
+            };
+        }
+
+        document.getElementById('btn-print-report').onclick = function () { window.print(); };
+        var mobileSearchInput = document.getElementById('mobile-client-search');
+        if (mobileSearchInput) {
+            mobileSearchInput.oninput = function (e) {
+                if (state.currentView === 'clients') {
+                    state.clientSearchQueryMobile = e.target.value;
+                    renderClients();
+                } else if (state.currentView === 'services') {
+                    state.serviceSearchQueryMobile = e.target.value;
+                    renderServices();
+                }
+            };
+        }
+
+        function renderApptItem(a) {
+            var types = Array.isArray(a.type) ? a.type.join(', ') : a.type;
+            return '<div class="appointment-item"><div class="appt-time">' + a.time + '</div><div class="appt-details" style="flex:1;"><span class="client-name">' + a.clientName + '</span><span class="appt-type"><i class="ph ph-calendar"></i> ' + a.date + ' • ' + types + '</span></div><div class="appt-actions"><button onclick="openMsgModal(\'' + (a.clientName || '') + '\',\'' + a.time + '\')"><i class="ph ph-paper-plane-tilt"></i></button><button onclick="del(\'appointment\',' + a.id + ')" style="color:var(--rose);"><i class="ph ph-trash"></i></button></div></div>';
+        }
+
+        // ACTIONS
+        window.del = function (t, id) {
+            brandedConfirm('Tem certeza que deseja excluir?', function (confirmed) {
+                if (confirmed) {
+                    if (t === 'appointment') state.appointments = state.appointments.filter(function (x) { return x.id != id });
+                    if (t === 'client') state.clients = state.clients.filter(function (x) { return x.id != id });
+                    if (t === 'service') state.services = state.services.filter(function (x) { return x.id != id });
+                    if (t === 'message') state.messages = state.messages.filter(function (x) { return x.id != id });
+                    saveState(); refreshView();
+                }
+            });
+        };
+        window.openMsgModal = function (name, time) {
+            var c = state.clients.find(function (x) { return x.name === name });
+            var phone = c ? c.phone : '';
+            var firstName = name ? name.split(' ')[0] : '[Nome]';
+            var hour = time || '[Hora]';
+            var defaultMsg = "Olá, " + firstName + "! ✨\nAqui é a Nélia a relembrar que tem marcação amanhã às " + hour + ".\nSe não conseguir comparecer, agradeço que me avise.\nMuito obrigado\nAté breve! 😊";
+
+            document.getElementById('modal-title-text').innerText = "Msg para " + name;
+            document.getElementById('modal-content-body').innerHTML =
+                '<div class="form-group"><textarea id="msg-text" placeholder="Escreva aqui..." style="height:150px;">' + defaultMsg + '</textarea></div>' +
+                '<div style="display:flex; gap:0.5rem;">' +
+                '<button class="btn btn-primary" style="flex:1; background:#3b82f6;" onclick="doSend(\'sms\',\'' + phone + '\')">SMS</button>' +
+                '<button class="btn btn-primary" style="flex:1; background:#25D366;" onclick="doSend(\'wa\',\'' + phone + '\')">WhatsApp</button>' +
+                '</div>';
+            modalOverlay.classList.add('open');
+        };
+        window.doSend = function (type, phone) {
+            var txt = document.getElementById('msg-text').value;
+            var cln = phone.replace(/\D/g, '');
+            if (type === 'sms') {
+                var sep = (/iphone|ipad|ipod/.test(navigator.userAgent.toLowerCase())) ? '&' : '?';
+                window.location.href = 'sms:' + cln + sep + 'body=' + encodeURIComponent(txt);
+            } else {
+                window.open('https://wa.me/55' + cln + '?text=' + encodeURIComponent(txt));
+            }
+            state.messages.push({ id: Date.now(), to: phone, content: txt, method: type === 'sms' ? 'SMS' : 'WhatsApp', date: new Date().toLocaleDateString() });
+            saveState(); modalOverlay.classList.remove('open'); refreshView();
+            // Toast
+            var t = document.createElement('div'); t.className = 'toast'; t.innerText = 'Enviado!'; document.body.appendChild(t); setTimeout(function () { t.remove() }, 2000);
+        };
+
+        // New Appt
+        window.openNewAppt = function () {
+            try {
+                selectedServicesMobile = [];
+                document.getElementById('modal-title-text').innerText = "Novo Agendamento";
+                document.getElementById('modal-content-body').innerHTML =
+                    '<div class="form-group"><label>Cliente</label><div style="display:flex; gap:0.5rem;">' +
+                    '<select id="inp-a-name" required style="flex:1;">' +
+                    '<option value="" disabled selected>Escolha um cliente...</option>' +
+                    state.clients.slice().sort(function (a, b) { return (a.name || "").localeCompare(b.name || ""); }).map(function (c) {
+                        var obsText = c.observations ? ' (' + c.observations + ')' : '';
+                        return '<option value="' + c.name + '">' + (c.name || '') + obsText + '</option>'
+                    }).join('') +
+                    '</select>' +
+                    '<button type="button" class="btn" onclick="window.openNewClient()" style="background:var(--bg-hover); padding:0 10px; border:1px solid var(--border-color);"><i class="ph ph-user-plus"></i></button></div></div>' +
+                    '<div class="form-group"><label>Data</label><input type="date" id="inp-a-date" value="' + new Date().toISOString().split('T')[0] + '"></div>' +
+                    '<div class="form-group"><label>Hora</label><input type="time" id="inp-a-time"></div>' +
+                    '<div class="form-group"><label>Serviços</label>' +
+                    '<div id="mobile-selected-services" style="display:flex; flex-wrap:wrap; gap:5px; margin-bottom:10px;"></div>' +
+                    '<div style="display:flex; gap:5px;">' +
+                    '<select id="inp-a-type" style="flex:1;">' +
+                    '<option value="" disabled selected>Adicionar...</option>' +
+                    state.services.map(function (s) { return '<option value="' + s.name + '">' + s.name + '</option>'; }).join('') +
+                    '</select>' +
+                    '<button type="button" class="btn" onclick="addServiceMobile()" style="background:var(--bg-hover); padding:0 10px; border:1px solid var(--border-color);"><i class="ph ph-plus"></i></button>' +
+                    '</div></div>' +
+                    '<button class="btn btn-primary" style="width:100%;" onclick="doSaveAppt()">Salvar</button>';
+                modalOverlay.classList.add('open');
+            } catch (e) { console.error("Error opening appt modal:", e); }
+        };
+
+        window.addServiceMobile = function () {
+            var s = document.getElementById('inp-a-type').value;
+            if (s && selectedServicesMobile.indexOf(s) === -1) {
+                selectedServicesMobile.push(s);
+                renderSelectedServicesMobile();
+            }
+        };
+
+        window.renderSelectedServicesMobile = function () {
+            var container = document.getElementById('mobile-selected-services');
+            container.innerHTML = selectedServicesMobile.map(function (s, idx) {
+                return '<div style="background:var(--accent-light); color:var(--accent-text); padding:4px 8px; border-radius:12px; font-size:0.75rem; display:flex; align-items:center; gap:5px;">' +
+                    s + '<i class="ph ph-x" style="cursor:pointer;" onclick="removeServiceMobile(' + idx + ')"></i></div>';
+            }).join('');
+        };
+
+        window.removeServiceMobile = function (idx) {
+            selectedServicesMobile.splice(idx, 1);
+            renderSelectedServicesMobile();
+        };
+        btnNewAppt.onclick = window.openNewAppt;
+
+        // New Client Explicitly
+        window.openNewClient = function () {
+            try {
+                document.getElementById('modal-title-text').innerText = "Novo Cliente";
+                document.getElementById('modal-content-body').innerHTML =
+                    '<div class="form-group"><label>Nome</label><input id="inp-c-name-new" placeholder="Nome completo"></div>' +
+                    '<div class="form-group"><label>Telefone</label><input id="inp-c-phone-new" placeholder="11999999999" type="tel"></div>' +
+                    '<div class="form-group"><label>Observações</label><textarea id="inp-c-obs-new" placeholder="Notas sobre o cliente..."></textarea></div>' +
+                    '<button class="btn btn-primary" style="width:100%;" onclick="doSaveClient()">Salvar</button>';
+                modalOverlay.classList.add('open');
+            } catch (e) { console.error("Error opening client modal:", e); }
+        }
+        btnNewClient.onclick = window.openNewClient;
+
+        window.editClient = function (id) {
+            var c = state.clients.find(function (x) { return x.id === id; });
+            if (!c) return;
+            document.getElementById('modal-title-text').innerText = "Editar Cliente";
+            document.getElementById('modal-content-body').innerHTML =
+                '<div class="form-group"><label>Nome</label><input id="inp-c-name-new" value="' + (c.name || '') + '" placeholder="Nome completo"></div>' +
+                '<div class="form-group"><label>Telefone</label><input id="inp-c-phone-new" value="' + (c.phone || '') + '" placeholder="11999999999" type="tel"></div>' +
+                '<div class="form-group"><label>Observações</label><textarea id="inp-c-obs-new" placeholder="Notas sobre o cliente...">' + (c.observations || '') + '</textarea></div>' +
+                '<button class="btn btn-primary" style="width:100%;" onclick="doSaveClient(' + id + ')">Salvar Alterações</button>';
+            modalOverlay.classList.add('open');
+        }
+
+        window.doSaveClient = function (id) {
+            var name = document.getElementById('inp-c-name-new').value;
+            var phone = document.getElementById('inp-c-phone-new').value;
+            var obs = document.getElementById('inp-c-obs-new').value;
+
+            if (name) {
+                if (id) {
+                    var c = state.clients.find(function (x) { return x.id === id; });
+                    if (c) { c.name = name; c.phone = phone; c.observations = obs; }
+                } else {
+                    state.clients.push({ id: Date.now(), name: name, phone: phone, observations: obs });
+                }
+                saveState(); modalOverlay.classList.remove('open'); refreshView();
+            }
+        }
+
+        // New Service
+        window.openNewService = function () {
+            try {
+                document.getElementById('modal-title-text').innerText = "Novo Serviço";
+                document.getElementById('modal-content-body').innerHTML =
+                    '<div class="form-group"><label>Nome do Serviço</label><input id="inp-s-name" placeholder="Ex: Unhas, Cabelo..."></div>' +
+                    '<div class="form-group"><label>Preço (€)</label><input id="inp-s-price" type="number" step="0.01" placeholder="0"></div>' +
+                    '<button class="btn btn-primary" style="width:100%;" onclick="doSaveService()">Salvar</button>';
+                modalOverlay.classList.add('open');
+            } catch (e) { console.error("Error opening service modal:", e); }
+        };
+        btnNewService.onclick = window.openNewService;
+
+        window.doSaveService = function () {
+            var name = document.getElementById('inp-s-name').value;
+            var price = document.getElementById('inp-s-price').value || "0.00";
+            if (name) {
+                state.services.push({ id: Date.now(), name: name, price: price });
+                saveState(); modalOverlay.classList.remove('open'); refreshView();
+            }
+        };
+
+        window.doSaveAppt = function () {
+            var btn = document.querySelector('button[onclick="doSaveAppt()"]');
+            if (btn) { btn.disabled = true; btn.innerText = "Salvando..."; }
+
+            var name = document.getElementById('inp-a-name').value;
+            var date = document.getElementById('inp-a-date').value || new Date().toISOString().split('T')[0];
+            var time = document.getElementById('inp-a-time').value || "12:00";
+
+            var proceed = function () {
+                if (selectedServicesMobile.length === 0) {
+                    alert('Por favor, adicione pelo menos um serviço.');
+                    if (btn) { btn.disabled = false; btn.innerText = "Salvar"; }
+                    return;
+                }
+
+                var price = 0;
+                selectedServicesMobile.forEach(function (sName) {
+                    var s = state.services.find(function (sv) { return sv.name === sName; });
+                    if (s) price += parseFloat(s.price || 0);
+                });
+
+                state.appointments.push({
+                    id: Date.now(), clientName: name,
+                    date: date,
+                    time: time,
+                    type: selectedServicesMobile, // Array
+                    price: price
+                });
+
+                // Auto-add client if new
+                var exists = false;
+                for (var k = 0; k < state.clients.length; k++) { if (state.clients[k].name === name) exists = true; }
+                if (!exists && name) {
+                    state.clients.push({ id: Date.now(), name: name, phone: '' });
+                }
+
+                saveState(); modalOverlay.classList.remove('open'); refreshView();
+                // Re-enable for next time
+                setTimeout(function () { if (btn) { btn.disabled = false; btn.innerText = "Salvar"; } }, 1000);
+            };
+
+            var checkOverlap = function () {
+                var isOverlap = state.appointments.some(function (a) { return a.date === date && a.time === time; });
+                if (isOverlap) {
+                    brandedConfirm('Já existe um agendamento neste horário. Continuar mesmo assim?', function (c2) {
+                        if (c2) proceed();
+                        else if (btn) { btn.disabled = false; btn.innerText = "Salvar"; }
+                    });
+                } else {
+                    proceed();
+                }
+            };
+
+            var today = new Date().toISOString().split('T')[0];
+            if (date < today) {
+                brandedConfirm('A data selecionada é anterior a hoje. Continuar?', function (c1) {
+                    if (c1) checkOverlap();
+                    else if (btn) { btn.disabled = false; btn.innerText = "Salvar"; }
+                });
+            } else {
+                checkOverlap();
+            }
+        };
+
+        document.querySelector('.close-modal').onclick = function () { modalOverlay.classList.remove('open'); };
+    </script>
+</body>

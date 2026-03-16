@@ -1,0 +1,776 @@
+{
+  "appointments": [
+    {
+      "id": 1768658629544,
+      "clientName": "Fabio",
+      "date": "2026-01-17",
+      "time": "19:03",
+      "type": "Unhas",
+      "price": "17.5"
+    },
+    {
+      "id": 1768832803007,
+      "clientName": "Fabio",
+      "date": "2026-01-19",
+      "time": "17:30",
+      "type": "Unhas",
+      "price": "17.5"
+    },
+    {
+      "id": 1768835406216,
+      "clientName": "Diogo",
+      "date": "2026-01-20",
+      "time": "15:10",
+      "type": "Unhas",
+      "price": "17.5"
+    },
+    {
+      "id": 1768835934757,
+      "clientName": "Diogo",
+      "date": "2026-01-21",
+      "time": "15:20",
+      "type": "Unhas",
+      "price": "17.5"
+    },
+    {
+      "id": 1769194371859,
+      "clientName": "Fabio",
+      "date": "2026-01-24",
+      "time": "18:30",
+      "type": "Unhas",
+      "price": "17.5"
+    },
+    {
+      "id": 1769194395382,
+      "clientName": "Diogo",
+      "date": "2026-01-24",
+      "time": "20:30",
+      "type": "Unhas",
+      "price": "17.5"
+    },
+    {
+      "id": 1773166155216,
+      "clientName": "Marina Soares",
+      "date": "2026-03-11",
+      "time": "09:30",
+      "type": [
+        "Unhas"
+      ],
+      "price": 17.5
+    },
+    {
+      "id": 1773166183453,
+      "clientName": "Mafalda",
+      "date": "2026-03-11",
+      "time": "11:00",
+      "type": [
+        "Unhas"
+      ],
+      "price": 17.5
+    },
+    {
+      "id": 1773166212202,
+      "clientName": "Ana Maria Rodrigues",
+      "date": "2026-03-11",
+      "time": "14:00",
+      "type": [
+        "Unhas",
+        "Pintar Cabelo"
+      ],
+      "price": 67.5
+    },
+    {
+      "id": 1773166231364,
+      "clientName": "Ana Santos",
+      "date": "2026-03-11",
+      "time": "16:15",
+      "type": [
+        "Unhas"
+      ],
+      "price": 17.5
+    },
+    {
+      "id": 1773166256093,
+      "clientName": "Alzira",
+      "date": "2026-03-12",
+      "time": "09:30",
+      "type": [
+        "Pedicure"
+      ],
+      "price": 10
+    },
+    {
+      "id": 1773166295847,
+      "clientName": "Elisabete",
+      "date": "2026-03-12",
+      "time": "11:45",
+      "type": [
+        "Unhas"
+      ],
+      "price": 17.5
+    },
+    {
+      "id": 1773166361582,
+      "clientName": "Rosinha",
+      "date": "2026-03-12",
+      "time": "15:30",
+      "type": [
+        "Manicure"
+      ],
+      "price": 10
+    },
+    {
+      "id": 1773166670513,
+      "clientName": "Balbina",
+      "date": "2026-03-12",
+      "time": "17:30",
+      "type": [
+        "Unhas"
+      ],
+      "price": 17.5
+    },
+    {
+      "id": 1773166947746,
+      "clientName": "Maria do C\u00e9u",
+      "date": "2026-03-13",
+      "time": "08:00",
+      "type": [
+        "Pintar Cabelo"
+      ],
+      "price": 50
+    },
+    {
+      "id": "1773167058115",
+      "clientName": "Anita",
+      "date": "2026-03-13",
+      "time": "08:30",
+      "type": [
+        "Lavar cabelo e secar"
+      ],
+      "price": 0
+    },
+    {
+      "id": "1773167086148",
+      "clientName": "Balbina",
+      "date": "2026-03-13",
+      "time": "16:00",
+      "type": [
+        "Lavar cabelo e secar"
+      ],
+      "price": 0
+    },
+    {
+      "id": 1773167166607,
+      "clientName": "Rosinha",
+      "date": "2026-03-13",
+      "time": "17:00",
+      "type": [
+        "Manicure"
+      ],
+      "price": 10
+    },
+    {
+      "id": 1773167186762,
+      "clientName": "Maura",
+      "date": "2026-03-13",
+      "time": "19:00",
+      "type": [
+        "Pedicure"
+      ],
+      "price": 10
+    },
+    {
+      "id": 1773387514208,
+      "clientName": "Ana Maria",
+      "date": "2026-03-16",
+      "time": "09:30",
+      "type": [
+        "Unhas",
+        "Pedicure"
+      ],
+      "price": 27.5
+    },
+    {
+      "id": 1773387547016,
+      "clientName": "Vera Sousa",
+      "date": "2026-03-16",
+      "time": "15:00",
+      "type": [
+        "Manicure"
+      ],
+      "price": 10
+    },
+    {
+      "id": 1773387571351,
+      "clientName": "Maura",
+      "date": "2026-03-16",
+      "time": "17:30",
+      "type": [
+        "Manicure"
+      ],
+      "price": 10
+    },
+    {
+      "id": 1773387623957,
+      "clientName": "Vera Melo",
+      "date": "2026-03-17",
+      "time": "17:15",
+      "type": [
+        "Manicure"
+      ],
+      "price": 10
+    },
+    {
+      "id": 1773387648931,
+      "clientName": "Carla Lessa",
+      "date": "2026-03-18",
+      "time": "14:30",
+      "type": [
+        "Manicure"
+      ],
+      "price": 10
+    },
+    {
+      "id": 1773387696852,
+      "clientName": "Marco Pinto",
+      "date": "2026-03-18",
+      "time": "08:00",
+      "type": [
+        "Laser"
+      ],
+      "price": 50
+    },
+    {
+      "id": 1773387766084,
+      "clientName": "Aurea",
+      "date": "2026-03-19",
+      "time": "09:30",
+      "type": [
+        "Unhas"
+      ],
+      "price": 17.5
+    },
+    {
+      "id": 1773387792239,
+      "clientName": "Manuela Valente",
+      "date": "2026-03-19",
+      "time": "11:00",
+      "type": [
+        "Unhas"
+      ],
+      "price": 17.5
+    },
+    {
+      "id": 1773387814782,
+      "clientName": "In\u00eas <3 ",
+      "date": "2026-03-19",
+      "time": "15:00",
+      "type": [
+        "Manicure"
+      ],
+      "price": 10
+    },
+    {
+      "id": 1773387867347,
+      "clientName": "Diana",
+      "date": "2026-03-19",
+      "time": "17:00",
+      "type": [
+        "Unhas"
+      ],
+      "price": 17.5
+    },
+    {
+      "id": 1773387929788,
+      "clientName": "Celeste",
+      "date": "2026-03-20",
+      "time": "10:30",
+      "type": [
+        "Unhas"
+      ],
+      "price": 17.5
+    },
+    {
+      "id": 1773388060438,
+      "clientName": "Maria do C\u00e9u",
+      "date": "2026-03-20",
+      "time": "09:00",
+      "type": [
+        "rosto",
+        "Lavar cabelo e secar"
+      ],
+      "price": 0
+    }
+  ],
+  "clients": [
+    {
+      "id": 1768495076052,
+      "name": "Fabio",
+      "email": "fabio4400@sapo.pt",
+      "phone": "918343630",
+      "observations": "Funcionario"
+    },
+    {
+      "id": 1768589349564,
+      "name": "Diogo",
+      "phone": "935279299"
+    },
+    {
+      "id": 1768848209716,
+      "name": "Joaquina",
+      "phone": "910173464",
+      "observations": ""
+    },
+    {
+      "id": 1768848241262,
+      "name": "Isabel Silva",
+      "phone": "918871441",
+      "observations": "Amiga D.Joaquina"
+    },
+    {
+      "id": 1768848271199,
+      "name": "Marina Soares",
+      "phone": "916312100"
+    },
+    {
+      "id": 1768848300857,
+      "name": "Ana Maria",
+      "phone": "936546385",
+      "observations": "Caiado"
+    },
+    {
+      "id": 1768848390798,
+      "name": "Manuela Valente",
+      "phone": "965227501",
+      "observations": "Policia"
+    },
+    {
+      "id": 1768848409567,
+      "name": "Z\u00e9lia",
+      "phone": "962446246"
+    },
+    {
+      "id": 1768848447887,
+      "name": "Rosinha",
+      "phone": "912281013"
+    },
+    {
+      "id": 1768848465610,
+      "name": "Cristiana",
+      "phone": "911184035"
+    },
+    {
+      "id": 1773160683415,
+      "name": "Maria do C\u00e9u",
+      "phone": "939453667",
+      "observations": ""
+    },
+    {
+      "id": 1773162907852,
+      "name": "Liliana Ara\u00fajo",
+      "phone": "913479771",
+      "observations": ""
+    },
+    {
+      "id": 1773162976026,
+      "name": "Balbina",
+      "phone": "918901040",
+      "observations": ""
+    },
+    {
+      "id": 1773163624792,
+      "name": "Marco Pinto",
+      "phone": "917586712",
+      "observations": ""
+    },
+    {
+      "id": 1773163757201,
+      "name": "Ana Maria Rodrigues",
+      "phone": "918402028",
+      "observations": ""
+    },
+    {
+      "id": 1773163771798,
+      "name": "Aurea",
+      "phone": "918763075",
+      "observations": ""
+    },
+    {
+      "id": 1773163790499,
+      "name": "C\u00e1tia Matos",
+      "phone": "913834215",
+      "observations": ""
+    },
+    {
+      "id": 1773163806826,
+      "name": "Maria",
+      "phone": "964364390",
+      "observations": ""
+    },
+    {
+      "id": 1773164751214,
+      "name": "Maura",
+      "phone": "937405333",
+      "observations": ""
+    },
+    {
+      "id": 1773164773666,
+      "name": "Liliana",
+      "phone": "937034948",
+      "observations": "Da S\u00f3nia"
+    },
+    {
+      "id": 1773164795762,
+      "name": "Tania",
+      "phone": "937034948",
+      "observations": "Filha da Liliana"
+    },
+    {
+      "id": 1773164818108,
+      "name": "Paula",
+      "phone": "938451346",
+      "observations": "Enfermeira"
+    },
+    {
+      "id": 1773164842553,
+      "name": "Celeste",
+      "phone": "918566734",
+      "observations": ""
+    },
+    {
+      "id": 1773164880647,
+      "name": "Vera Sousa",
+      "phone": "967262566",
+      "observations": "Tropa"
+    },
+    {
+      "id": 1773164894694,
+      "name": "Lilia",
+      "phone": "962657633",
+      "observations": ""
+    },
+    {
+      "id": 1773164918336,
+      "name": "Elisabete",
+      "phone": "912623317",
+      "observations": "IEFP"
+    },
+    {
+      "id": 1773164946816,
+      "name": "Fernanda Oliveira",
+      "phone": "917083539",
+      "observations": ""
+    },
+    {
+      "id": 1773165008378,
+      "name": "In\u00eas <3 ",
+      "phone": "913458149",
+      "observations": ""
+    },
+    {
+      "id": 1773165158880,
+      "name": "Dra.Teresa",
+      "phone": "914885287",
+      "observations": ""
+    },
+    {
+      "id": 1773165186044,
+      "name": "Lina",
+      "phone": "967036249",
+      "observations": ""
+    },
+    {
+      "id": 1773165366570,
+      "name": "S\u00f3nia",
+      "phone": "937179153",
+      "observations": "Da Hilda"
+    },
+    {
+      "id": 1773165420263,
+      "name": "Vera Melo",
+      "phone": "938207670",
+      "observations": ""
+    },
+    {
+      "id": 1773165552793,
+      "name": "Carla Lessa",
+      "phone": "934901178",
+      "observations": ""
+    },
+    {
+      "id": 1773165593305,
+      "name": "Ana Santos",
+      "phone": "914966811",
+      "observations": ""
+    },
+    {
+      "id": 1773165610264,
+      "name": "Mafalda",
+      "phone": "913906875",
+      "observations": ""
+    },
+    {
+      "id": 1773165634444,
+      "name": "Teresa",
+      "phone": "936635693",
+      "observations": "Da Aurea"
+    },
+    {
+      "id": 1773165704426,
+      "name": "Lena",
+      "phone": "936092343",
+      "observations": ""
+    },
+    {
+      "id": 1773165723451,
+      "name": "Telma",
+      "phone": "936092343",
+      "observations": "Filha da Lena"
+    },
+    {
+      "id": 1773165746179,
+      "name": "Salete",
+      "phone": "924456014",
+      "observations": ""
+    },
+    {
+      "id": 1773165765037,
+      "name": "Maria Jos\u00e9",
+      "phone": "917769252",
+      "observations": ""
+    },
+    {
+      "id": 1773165782003,
+      "name": "Patr\u00edcia Melo",
+      "phone": "938253751",
+      "observations": ""
+    },
+    {
+      "id": 1773165804354,
+      "name": "Alzira",
+      "phone": "933255539",
+      "observations": "M\u00e3e da Aurea"
+    },
+    {
+      "id": 1773165819303,
+      "name": "F\u00e1tima",
+      "phone": "914823041",
+      "observations": ""
+    },
+    {
+      "id": 1773165838367,
+      "name": "Tiago",
+      "phone": "916888407",
+      "observations": ""
+    },
+    {
+      "id": 1773165854681,
+      "name": "Luis Torres",
+      "phone": "966501723",
+      "observations": ""
+    },
+    {
+      "id": 1773165868495,
+      "name": "Anita",
+      "phone": "917727302",
+      "observations": ""
+    },
+    {
+      "id": 1773165889749,
+      "name": "Ercilia",
+      "phone": "910059508",
+      "observations": ""
+    },
+    {
+      "id": 1773165957943,
+      "name": "Diana",
+      "phone": "916941640",
+      "observations": "Da Leta"
+    },
+    {
+      "id": 1773165986732,
+      "name": "Mariana",
+      "phone": "912909106",
+      "observations": "Filha da Salete"
+    },
+    {
+      "id": 1773166000759,
+      "name": "No\u00e9mia",
+      "phone": "962702987",
+      "observations": ""
+    },
+    {
+      "id": 1773173544250,
+      "name": "Armanda",
+      "phone": "916033745",
+      "observations": ""
+    },
+    {
+      "id": 1773173560179,
+      "name": "Gloria",
+      "phone": "917007862",
+      "observations": ""
+    },
+    {
+      "id": 1773173574416,
+      "name": "Bruna",
+      "phone": "926659439",
+      "observations": ""
+    }
+  ],
+  "services": [
+    {
+      "id": 1,
+      "name": "Unhas",
+      "duration": "90",
+      "price": "17.5"
+    },
+    {
+      "id": 1768495035765,
+      "name": "Pintar Cabelo",
+      "duration": "90",
+      "price": "50"
+    },
+    {
+      "id": 1768644234016,
+      "name": "Manicure",
+      "price": "10"
+    },
+    {
+      "id": 1768644258131,
+      "name": "Pedicure",
+      "price": "10"
+    },
+    {
+      "id": 1768644271895,
+      "name": "Limpeza de Pele",
+      "price": "20"
+    },
+    {
+      "id": 1768644284754,
+      "name": "Laser",
+      "price": "50"
+    },
+    {
+      "id": 1773387953157,
+      "name": "rosto ",
+      "price": "30"
+    },
+    {
+      "id": 1773387971419,
+      "name": "Lavar cabelo e secar ",
+      "price": "15"
+    }
+  ],
+  "messages": [
+    {
+      "id": 1768573873545,
+      "to": "Fabio",
+      "content": "Teste",
+      "date": "2026-01-16",
+      "time": "14:31",
+      "method": "SMS"
+    },
+    {
+      "id": 1768589479402,
+      "to": "Diogo",
+      "content": "Boa tarde relembramos a sua marca\u00e7\u00e3o \nEm causo de n\u00e3o conseguir comparecer agradecemos que informe\nMuito obrigado",
+      "date": "2026-01-16",
+      "time": "18:51",
+      "method": "SMS"
+    },
+    {
+      "id": 1768835358518,
+      "to": "Fabio",
+      "content": "Ol\u00e1, Fabio! \u2728\nAqui \u00e9 a N\u00e9lia a relembrar que tem marca\u00e7\u00e3o amanh\u00e3 \u00e0s 17:30.\nSe n\u00e3o conseguir comparecer, agrade\u00e7o que me avise.\nMuito obrigado\nAt\u00e9 breve! \ud83d\ude0a",
+      "date": "2026-01-19",
+      "time": "15:09",
+      "method": "SMS"
+    },
+    {
+      "id": 1773168728262,
+      "to": "Marina Soares",
+      "content": "Ol\u00e1, Marina! \u2728\nAqui \u00e9 a N\u00e9lia a relembrar que tem marca\u00e7\u00e3o amanh\u00e3 \u00e0s 09:30.\nSe n\u00e3o conseguir comparecer, agrade\u00e7o que me avise.\nMuito obrigado\nAt\u00e9 breve! \ud83d\ude0a",
+      "date": "2026-03-10",
+      "time": "18:52",
+      "method": "SMS"
+    },
+    {
+      "id": 1773168739574,
+      "to": "Mafalda",
+      "content": "Ol\u00e1, Mafalda! \u2728\nAqui \u00e9 a N\u00e9lia a relembrar que tem marca\u00e7\u00e3o amanh\u00e3 \u00e0s 11:00.\nSe n\u00e3o conseguir comparecer, agrade\u00e7o que me avise.\nMuito obrigado\nAt\u00e9 breve! \ud83d\ude0a",
+      "date": "2026-03-10",
+      "time": "18:52",
+      "method": "SMS"
+    },
+    {
+      "id": 1773168745465,
+      "to": "Ana Maria Rodrigues",
+      "content": "Ol\u00e1, Ana! \u2728\nAqui \u00e9 a N\u00e9lia a relembrar que tem marca\u00e7\u00e3o amanh\u00e3 \u00e0s 14:00.\nSe n\u00e3o conseguir comparecer, agrade\u00e7o que me avise.\nMuito obrigado\nAt\u00e9 breve! \ud83d\ude0a",
+      "date": "2026-03-10",
+      "time": "18:52",
+      "method": "SMS"
+    },
+    {
+      "id": 1773168752944,
+      "to": "Ana Santos",
+      "content": "Ol\u00e1, Ana! \u2728\nAqui \u00e9 a N\u00e9lia a relembrar que tem marca\u00e7\u00e3o amanh\u00e3 \u00e0s 16:15.\nSe n\u00e3o conseguir comparecer, agrade\u00e7o que me avise.\nMuito obrigado\nAt\u00e9 breve! \ud83d\ude0a",
+      "date": "2026-03-10",
+      "time": "18:52",
+      "method": "SMS"
+    },
+    {
+      "id": 1773337656524,
+      "to": "Maria do C\u00e9u",
+      "content": "Ol\u00e1, Maria! \u2728\nAqui \u00e9 a N\u00e9lia a relembrar que tem marca\u00e7\u00e3o amanh\u00e3 \u00e0s 08:00.\nSe n\u00e3o conseguir comparecer, agrade\u00e7o que me avise.\nMuito obrigado\nAt\u00e9 breve! \ud83d\ude0a",
+      "date": "2026-03-12",
+      "time": "17:47",
+      "method": "SMS"
+    },
+    {
+      "id": 1773337677794,
+      "to": "Anita",
+      "content": "Ol\u00e1, Anita! \u2728\nAqui \u00e9 a N\u00e9lia a relembrar que tem marca\u00e7\u00e3o amanh\u00e3 \u00e0s 08:30.\nSe n\u00e3o conseguir comparecer, agrade\u00e7o que me avise.\nMuito obrigado\nAt\u00e9 breve! \ud83d\ude0a",
+      "date": "2026-03-12",
+      "time": "17:47",
+      "method": "SMS"
+    },
+    {
+      "id": 1773337682973,
+      "to": "Bruna",
+      "content": "Ol\u00e1, Bruna! \u2728\nAqui \u00e9 a N\u00e9lia a relembrar que tem marca\u00e7\u00e3o amanh\u00e3 \u00e0s 15:00.\nSe n\u00e3o conseguir comparecer, agrade\u00e7o que me avise.\nMuito obrigado\nAt\u00e9 breve! \ud83d\ude0a",
+      "date": "2026-03-12",
+      "time": "17:48",
+      "method": "SMS"
+    },
+    {
+      "id": 1773337692310,
+      "to": "Balbina",
+      "content": "Ol\u00e1, Balbina! \u2728\nAqui \u00e9 a N\u00e9lia a relembrar que tem marca\u00e7\u00e3o amanh\u00e3 \u00e0s 16:00.\nSe n\u00e3o conseguir comparecer, agrade\u00e7o que me avise.\nMuito obrigado\nAt\u00e9 breve! \ud83d\ude0a",
+      "date": "2026-03-12",
+      "time": "17:48",
+      "method": "SMS"
+    },
+    {
+      "id": 1773337700730,
+      "to": "Rosinha",
+      "content": "Ol\u00e1, Rosinha! \u2728\nAqui \u00e9 a N\u00e9lia a relembrar que tem marca\u00e7\u00e3o amanh\u00e3 \u00e0s 17:00.\nSe n\u00e3o conseguir comparecer, agrade\u00e7o que me avise.\nMuito obrigado\nAt\u00e9 breve! \ud83d\ude0a",
+      "date": "2026-03-12",
+      "time": "17:48",
+      "method": "SMS"
+    },
+    {
+      "id": 1773337707666,
+      "to": "Maura",
+      "content": "Ol\u00e1, Maura! \u2728\nAqui \u00e9 a N\u00e9lia a relembrar que tem marca\u00e7\u00e3o amanh\u00e3 \u00e0s 19:00.\nSe n\u00e3o conseguir comparecer, agrade\u00e7o que me avise.\nMuito obrigado\nAt\u00e9 breve! \ud83d\ude0a",
+      "date": "2026-03-12",
+      "time": "17:48",
+      "method": "SMS"
+    }
+  ],
+  "showArchive": false,
+  "clientSearchQuery": "",
+  "selectedReportMonth": "2026-01",
+  "currentView": "calendar",
+  "serviceSearchQuery": ""
+}
