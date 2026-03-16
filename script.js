@@ -141,6 +141,10 @@ function initNavigation() {
             navItems.forEach(nav => nav.classList.remove('active'));
             e.currentTarget.classList.add('active');
             state.currentView = e.currentTarget.dataset.view;
+            // Clear search when changing views
+            state.clientSearchQuery = "";
+            state.serviceSearchQuery = "";
+            if (clientSearchInput) clientSearchInput.value = "";
             saveState();
             refreshCurrentView();
         });
@@ -582,6 +586,19 @@ document.addEventListener('DOMContentLoaded', () => {
         if(phone) window.location.href = `sms:${phone}?&body=${encodeURIComponent(document.getElementById('msg-content').value)}`;
         else showNotification('Sem telefone');
     };
+
+    if (clientSearchInput) {
+        clientSearchInput.addEventListener('input', (e) => {
+            const query = e.target.value;
+            if (state.currentView === 'clients') {
+                state.clientSearchQuery = query;
+                renderClients();
+            } else if (state.currentView === 'services') {
+                state.serviceSearchQuery = query;
+                renderServices();
+            }
+        });
+    }
 
     initializeData();
 });
