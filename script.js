@@ -452,11 +452,17 @@ function triggerEditService(id) {
 }
 
 function triggerMessage(name, time) {
-    const client = state.clients.find(c => c.name === name);
-    document.getElementById('msg-recipient').value = name;
+    // Robust lookup: try direct match, then strip observations if present (from old data)
+    let client = state.clients.find(c => c.name === name);
+    if (!client && name.includes(' - ')) {
+        const cleanName = name.split(' - ')[0].trim();
+        client = state.clients.find(c => c.name === cleanName);
+    }
+
+    document.getElementById('msg-recipient').value = client ? client.name : name;
     document.getElementById('msg-phone-hidden').value = client ? client.phone : '';
     const hourLabel = time || '[Hora]';
-    const firstName = name ? name.split(' ')[0] : '[Nome]';
+    const firstName = (client ? client.name : name).split(' ')[0];
     document.getElementById('msg-content').value = `Olá, ${firstName}! ✨\nAqui é a Nélia a relembrar que tem marcação amanhã às ${hourLabel}.\nSe não conseguir comparecer, agradeço que me avise.\nMuito obrigada\nAté breve! 😊`;
     openModal(messageModal);
 }
@@ -471,8 +477,8 @@ function updateClientDatalist() {
     const dataList = document.getElementById('client-list');
     if (!dataList) return;
     dataList.innerHTML = state.clients.map(c => {
-        const obs = c.observations ? ` - ${c.observations}` : '';
-        return `<option value="${c.name}${obs}">`;
+        // Keeping the value as the name only, but showing observations in the dropdown text
+        return `<option value="${c.name}">${c.name}${c.observations ? ' - ' + c.observations : ''}</option>`;
     }).join('');
 }
 
@@ -563,9 +569,16 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('appointment-form').onsubmit = async (e) => {
         e.preventDefault();
         const id = document.getElementById('appt-id').value;
+        
+        let clientName = document.getElementById('appt-name').value;
+        // Clean name if user selected it with observation suffix from old datalist version
+        if (clientName.includes(' - ')) {
+            clientName = clientName.split(' - ')[0].trim();
+        }
+
         const newAppt = {
             id: id || Date.now(),
-            clientName: document.getElementById('appt-name').value,
+            clientName: clientName,
             date: document.getElementById('appt-date').value,
             time: document.getElementById('appt-time').value,
             type: selectedServices,

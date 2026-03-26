@@ -1096,10 +1096,14 @@
         };
         window.openMsgModal = function (name, time) {
             var c = state.clients.find(function (x) { return x.name === name });
+            if (!c && name.indexOf(' - ') !== -1) {
+                var cleanName = name.split(' - ')[0].trim();
+                c = state.clients.find(function (x) { return x.name === cleanName });
+            }
             var phone = c ? c.phone : '';
-            var firstName = name ? name.split(' ')[0] : '[Nome]';
+            var firstName = (c ? c.name : name).split(' ')[0];
             var hour = time || '[Hora]';
-            var defaultMsg = "Olá, " + firstName + "! ✨\nAqui é a Nélia a relembrar que tem marcação amanhã às " + hour + ".\nSe não conseguir comparecer, agradeço que me avise.\nMuito obrigado\nAté breve! 😊";
+            var defaultMsg = "Olá, " + firstName + "! ✨\nAqui é a Nélia a relembrar que tem marcação amanhã às " + hour + ".\nSe não conseguir comparecer, agradeço que me avise.\nMuito obrigada\nAté breve! 😊";
 
             document.getElementById('modal-title-text').innerText = "Msg para " + name;
             document.getElementById('modal-content-body').innerHTML =
