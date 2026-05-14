@@ -235,7 +235,7 @@ function renderDashboard() {
     const bdays = getWeekBirthdays();
 
     contentArea.innerHTML = `
-        <div class="dashboard-grid" style="grid-template-columns: repeat(3, 1fr);">
+        <div class="dashboard-grid">
             <div class="card stat-card">
                 <div class="stat-header"><span class="stat-icon"><i class="ph ph-trend-up"></i></span></div>
                 <div class="stat-info"><span class="label">Total de Marcações</span><span class="value">${state.appointments.length}</span></div>
