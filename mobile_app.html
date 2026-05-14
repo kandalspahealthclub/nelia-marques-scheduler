@@ -797,6 +797,12 @@
         }
 
         // DOM
+        function getClientObs(name) {
+            if (!name) return '';
+            var client = state.clients.find(function(c) { return c.name === name; });
+            return (client && client.observations) ? '<span style="opacity: 0.5; font-weight: 400; font-size: 0.8rem; margin-left: 6px;">(' + client.observations + ')</span>' : '';
+        }
+
         var contentArea = document.getElementById('content-area');
         var pageTitle = document.getElementById('page-title');
         var navItems = document.querySelectorAll('.nav-item');
@@ -1079,7 +1085,7 @@
 
         function renderApptItem(a) {
             var types = Array.isArray(a.type) ? a.type.join(', ') : a.type;
-            return '<div class="appointment-item"><div class="appt-time">' + a.time + '</div><div class="appt-details" style="flex:1;"><span class="client-name">' + a.clientName + '</span><span class="appt-type"><i class="ph ph-calendar"></i> ' + a.date + ' • ' + types + '</span></div><div class="appt-actions"><button onclick="openMsgModal(\'' + (a.clientName || '') + '\',\'' + a.time + '\')"><i class="ph ph-paper-plane-tilt"></i></button><button onclick="del(\'appointment\',' + a.id + ')" style="color:var(--rose);"><i class="ph ph-trash"></i></button></div></div>';
+            return '<div class="appointment-item"><div class="appt-time">' + a.time + '</div><div class="appt-details" style="flex:1;"><span class="client-name">' + a.clientName + getClientObs(a.clientName) + '</span><span class="appt-type"><i class="ph ph-calendar"></i> ' + a.date + ' • ' + types + '</span></div><div class="appt-actions"><button onclick="openMsgModal(\'' + (a.clientName || '') + '\',\'' + a.time + '\')"><i class="ph ph-paper-plane-tilt"></i></button><button onclick="del(\'appointment\',' + a.id + ')" style="color:var(--rose);"><i class="ph ph-trash"></i></button></div></div>';
         }
 
         // ACTIONS
