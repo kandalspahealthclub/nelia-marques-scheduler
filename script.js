@@ -1,89 +1,88 @@
+
 // 1. Estado e Configuração
 var defaultState = {
     appointments: [],
-    clients: [{ id: 1, name: "Maria Garcia", phone: "912345678" }],
-    services: [{ id: 1, name: "Consulta", duration: 30, price: 150 }],
+    clients: [],
+    services: [],
     messages: [],
     currentView: 'dashboard'
 };
 
-var firebaseConfig = {
-  apiKey: "AIzaSyACxo7xuXIVlCnGvGE_QetIbWhyB6V73PM",
-  authDomain: "nelia-marques-scheduler.firebaseapp.com",
-  databaseURL: "https://nelia-marques-scheduler-default-rtdb.firebaseio.com",
-  projectId: "nelia-marques-scheduler",
-  storageBucket: "nelia-marques-scheduler.firebasestorage.app",
-  messagingSenderId: "898663480243",
-  appId: "1:898663480243:web:1690883d4bd926ac2229c6",
-  measurementId: "G-6G7N5J5VPN"
-};
-
-var db, stateRef;
-try {
-    if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
-    db = firebase.database();
-    stateRef = db.ref('state');
-} catch (e) { console.error("Firebase Error", e); }
-
 var state = JSON.parse(JSON.stringify(defaultState));
 var isSaving = false;
 var isPendingSave = false;
-var selectedServices = [];
 
 // DOM Elements
 var contentArea, pageTitle, navItems, appointmentModal, serviceModal, clientModal, messageModal, modalOverlay, clientSearchInput;
-
-function saveState() {
-    isSaving = true;
-    updateSyncStatus('saving');
-    stateRef.set(state).then(function() {
-        isSaving = false;
-        updateSyncStatus('synced');
-        if (isPendingSave) { isPendingSave = false; saveState(); }
-    }).catch(function() {
-        isSaving = false;
-        updateSyncStatus('error');
-    });
-}
 
 function updateSyncStatus(status) {
     var indicator = document.getElementById('sync-indicator');
     if (!indicator) {
         indicator = document.createElement('div');
         indicator.id = 'sync-indicator';
-        indicator.style = 'position:fixed; bottom:20px; right:20px; font-size:0.75rem; background:white; padding:4px 10px; border-radius:20px; box-shadow:0 2px 10px rgba(0,0,0,0.1); z-index:9999; border:1px solid #eee;';
+        indicator.style = 'position:fixed; bottom:20px; right:20px; font-size:0.75rem; background:white; padding:4px 10px; border-radius:20px; box-shadow:0 2px 10px rgba(0,0,0,0.1); z-index:9999; border:1px solid #eee; transition: opacity 0.3s;';
         document.body.appendChild(indicator);
     }
     if (status === 'saving') { indicator.innerHTML = 'A guardar...'; indicator.style.opacity = '1'; }
-    else if (status === 'synced') { indicator.innerHTML = 'Sincronizado'; setTimeout(function() { indicator.style.opacity = '0'; }, 3000); }
-    else if (status === 'error') { indicator.innerHTML = 'Erro de ligação'; }
+    else if (status === 'synced') { indicator.innerHTML = 'Sincronizado'; setTimeout(function() { if (!isSaving) indicator.style.opacity = '0'; }, 3000); }
+    else if (status === 'error') { indicator.innerHTML = 'Erro de ligação'; indicator.style.opacity = '1'; }
 }
 
+// Lógica de Sincronização Local (Server.py / Flask)
 function initializeData() {
     updateSyncStatus('saving');
-    stateRef.once('value').then(function(snapshot) {
-        var val = snapshot.val();
-        if (val) {
-            state = val;
-            state.currentView = 'dashboard';
-            refreshCurrentView();
-            updateClientDatalist();
-            updateSyncStatus('synced');
-        } else {
-            saveState();
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', '/api/state?t=' + Date.now(), true);
+    xhr.onload = function() {
+        if (xhr.status === 200) {
+            try {
+                var data = JSON.parse(xhr.responseText);
+                state = data;
+                state.currentView = 'dashboard';
+                refreshCurrentView();
+                updateClientDatalist();
+                updateSyncStatus('synced');
+            } catch (e) { console.error("Erro ao processar dados", e); }
         }
-    });
-    stateRef.on('value', function(snapshot) {
-        var newVal = snapshot.val();
-        if (!newVal || isSaving) return;
-        if (JSON.stringify(newVal) !== JSON.stringify(state)) {
-            var activeView = state.currentView;
-            state = newVal;
-            state.currentView = activeView;
-            refreshCurrentView();
-            updateClientDatalist();
-        }
-    });
+    };
+    xhr.send();
+
+    // Polling opcional para manter sincronizado com outros dispositivos
+    setInterval(function() {
+        if (isSaving || document.querySelector('.modal-overlay.open')) return;
+        var pollXhr = new XMLHttpRequest();
+        pollXhr.open('GET', '/api/state?t=' + Date.now(), true);
+        pollXhr.onload = function() {
+            if (pollXhr.status === 200) {
+                var newData = JSON.parse(pollXhr.responseText);
+                if (JSON.stringify(newData) !== JSON.stringify(state)) {
+                    var currentView = state.currentView;
+                    state = newData;
+                    state.currentView = currentView;
+                    refreshCurrentView();
+                    updateClientDatalist();
+                }
+            }
+        };
+        pollXhr.send();
+    }, 5000);
+}
+
+function saveState() {
+    isSaving = true;
+    updateSyncStatus('saving');
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', '/api/state', true);
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.onload = function() {
+        isSaving = false;
+        updateSyncStatus('synced');
+    };
+    xhr.onerror = function() {
+        isSaving = false;
+        updateSyncStatus('error');
+    };
+    xhr.send(JSON.stringify(state));
 }
 
 function getClientObs(name) {
@@ -105,7 +104,7 @@ function getWeekBirthdays() {
         d.setDate(start.getDate() + i);
         weekDates.push({ m: d.getMonth() + 1, d: d.getDate(), s: d.toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' }) });
     }
-    return state.clients.filter(function(c) {
+    return (state.clients || []).filter(function(c) {
         if (!c.birthdate) return false;
         var p = c.birthdate.split('-');
         var bm = parseInt(p[1], 10), bd = parseInt(p[2], 10);
@@ -121,7 +120,7 @@ function getWeekBirthdays() {
 function renderDashboard() {
     pageTitle.textContent = "Painel";
     var todayStr = new Date().toISOString().split('T')[0];
-    var tAppts = state.appointments.filter(function(a) { return a.date === todayStr; });
+    var tAppts = (state.appointments || []).filter(function(a) { return a.date === todayStr; });
     var bdays = getWeekBirthdays();
 
     var bHTML = bdays.length > 0 ? bdays.map(function(b) {
@@ -129,58 +128,53 @@ function renderDashboard() {
     }).join('') : '0';
 
     contentArea.innerHTML = '<div class="dashboard-grid">' +
-        '<div class="card stat-card"><div class="stat-info"><span class="label">Marcações</span><span class="value">' + state.appointments.length + '</span></div></div>' +
-        '<div class="card stat-card"><div class="stat-info"><span class="label">Clientes</span><span class="value">' + state.clients.length + '</span></div></div>' +
+        '<div class="card stat-card"><div class="stat-info"><span class="label">Total Hoje</span><span class="value">' + tAppts.length + '</span></div></div>' +
+        '<div class="card stat-card"><div class="stat-info"><span class="label">Clientes</span><span class="value">' + (state.clients ? state.clients.length : 0) + '</span></div></div>' +
         '<div class="card stat-card" style="border-color:var(--rose); cursor:pointer;" onclick="window.goToBirthdays()">' +
             '<div class="stat-info"><span class="label">Aniversários</span>' +
             '<div style="max-height:80px; overflow-y:auto; font-size:0.8rem;">' + bHTML + '</div></div>' +
         '</div>' +
     '</div>' +
-    '<div class="section-header"><h2>Agenda de Hoje</h2></div>' +
+    '<div class="section-header" style="margin-top:2rem;"><h3>Agenda de Hoje</h3></div>' +
     '<div class="appointments-list">' + (tAppts.length > 0 ? tAppts.map(function(a) {
         return '<div class="appointment-item"><b>' + a.time + '</b> - ' + a.clientName + getClientObs(a.clientName) + '</div>';
-    }).join('') : 'Vazio hoje.') + '</div>';
+    }).join('') : '<div style="padding:20px; color:#aaa; text-align:center;">Vazio hoje.</div>') + '</div>';
 }
 
 function renderCalendar() {
     pageTitle.textContent = "Agenda";
-    var appts = [].concat(state.appointments).sort(function(a,b) { return (a.date + a.time).localeCompare(b.date + b.time); });
-    contentArea.innerHTML = '<div class="appointments-list">' + appts.map(function(a) {
+    var appts = [].concat(state.appointments || []).sort(function(a,b) { return (a.date + a.time).localeCompare(b.date + b.time); });
+    contentArea.innerHTML = '<div class="appointments-list">' + (appts.length > 0 ? appts.map(function(a) {
         return '<div class="appointment-item"><b>' + a.date + ' ' + a.time + '</b> - ' + a.clientName + 
-               ' <button onclick="triggerEditAppt(\'' + a.id + '\')">Editar</button></div>';
-    }).join('') + '</div>';
+               ' <div class="appt-actions"><button onclick="triggerEditAppt(\'' + a.id + '\')">Editar</button></div></div>';
+    }).join('') : 'Sem marcações.') + '</div>';
 }
 
 function renderClients() {
     pageTitle.textContent = "Clientes";
-    contentArea.innerHTML = '<div class="appointments-list">' + state.clients.map(function(c) {
+    contentArea.innerHTML = '<div class="appointments-list">' + (state.clients || []).map(function(c) {
         return '<div class="appointment-item"><b>' + c.name + '</b> - ' + (c.phone || 'S/T') + 
-               ' <button onclick="triggerEditClient(\'' + c.id + '\')">Editar</button></div>';
+               ' <div class="appt-actions"><button onclick="triggerEditClient(\'' + c.id + '\')">Editar</button></div></div>';
     }).join('') + '</div>';
 }
 
 function renderServices() {
     pageTitle.textContent = "Serviços";
-    contentArea.innerHTML = '<div class="appointments-list">' + state.services.map(function(s) {
+    contentArea.innerHTML = '<div class="appointments-list">' + (state.services || []).map(function(s) {
         return '<div class="appointment-item"><b>' + s.name + '</b> - €' + s.price + '</div>';
     }).join('') + '</div>';
-}
-
-function renderReports() {
-    pageTitle.textContent = "Relatórios";
-    contentArea.innerHTML = '<div class="card">Total de Clientes: ' + state.clients.length + '</div>';
 }
 
 function renderBirthdays() {
     pageTitle.textContent = "Aniversários da Semana";
     var bdays = getWeekBirthdays();
     if (bdays.length === 0) {
-        contentArea.innerHTML = '<p>Nenhum esta semana.</p><button onclick="state.currentView=\'dashboard\'; refreshCurrentView();">Voltar</button>';
+        contentArea.innerHTML = '<div style="padding:40px; text-align:center;"><p>Nenhum esta semana.</p><br><button class="btn" onclick="state.currentView=\'dashboard\'; refreshCurrentView();">Voltar</button></div>';
         return;
     }
     contentArea.innerHTML = '<div class="appointments-list">' + bdays.map(function(b) {
         return '<div class="appointment-item"><b>' + b.name + '</b> (' + b.dayDisplay + ') - ' + (b.phone || 'S/T') + 
-               ' <button onclick="triggerMessage(\'' + b.name + '\', \'\')">Mensagem</button></div>';
+               ' <div class="appt-actions"><button onclick="triggerMessage(\'' + b.name + '\', \'\')">Mensagem</button></div></div>';
     }).join('') + '</div>';
 }
 
@@ -192,75 +186,40 @@ function refreshCurrentView() {
     else if (v === 'calendar') renderCalendar();
     else if (v === 'clients') renderClients();
     else if (v === 'services') renderServices();
-    else if (v === 'reports') renderReports();
+    else if (v === 'reports') renderDashboard(); // Placeholder
     else if (v === 'birthdays') renderBirthdays();
-}
-
-function triggerEditAppt(id) {
-    var a = state.appointments.find(function(i) { return i.id == id; });
-    if (!a) return;
-    document.getElementById('appt-id').value = a.id;
-    document.getElementById('appt-name').value = a.clientName;
-    document.getElementById('appt-date').value = a.date;
-    document.getElementById('appt-time').value = a.time;
-    openModal(appointmentModal);
-}
-
-function triggerEditClient(id) {
-    var c = state.clients.find(function(i) { return i.id == id; });
-    if (!c) return;
-    document.getElementById('client-id').value = c.id;
-    document.getElementById('client-name').value = c.name;
-    document.getElementById('client-phone').value = c.phone || '';
-    openModal(clientModal);
-}
-
-function triggerMessage(name, time) {
-    var c = state.clients.find(function(i) { return i.name === name; });
-    document.getElementById('msg-recipient').value = name;
-    document.getElementById('msg-phone-hidden').value = c ? c.phone : '';
-    document.getElementById('msg-content').value = "Olá " + name + "! Parabéns! ✨";
-    openModal(messageModal);
 }
 
 function openModal(el) { el.style.display = 'block'; modalOverlay.style.display = 'flex'; }
 window.closeModals = function() {
-    appointmentModal.style.display = 'none';
-    serviceModal.style.display = 'none';
-    clientModal.style.display = 'none';
-    messageModal.style.display = 'none';
+    document.querySelectorAll('.modal').forEach(function(m) { m.style.display = 'none'; });
     modalOverlay.style.display = 'none';
 };
 
 function updateClientDatalist() {
     var dl = document.getElementById('client-list');
-    if (dl) dl.innerHTML = state.clients.map(function(c) { return '<option value="' + c.name + '">'; }).join('');
+    if (dl && state.clients) dl.innerHTML = state.clients.map(function(c) { return '<option value="' + c.name + '">'; }).join('');
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    initDOMElements();
-    initNavigation();
-    
+    contentArea = document.getElementById('content-area');
+    pageTitle = document.getElementById('page-title');
+    navItems = document.querySelectorAll('.nav-item');
+    appointmentModal = document.getElementById('appointment-modal');
+    serviceModal = document.getElementById('service-modal');
+    clientModal = document.getElementById('client-modal');
+    messageModal = document.getElementById('message-modal');
+    modalOverlay = document.getElementById('modal-overlay');
+
+    for (var i = 0; i < navItems.length; i++) {
+        navItems[i].onclick = function() {
+            state.currentView = this.dataset.view;
+            refreshCurrentView();
+        };
+    }
+
     document.querySelectorAll('.close-modal, .close-modal-btn').forEach(function(b) { b.onclick = window.closeModals; });
     modalOverlay.onclick = function(e) { if (e.target === modalOverlay) window.closeModals(); };
-
-    document.getElementById('appointment-form').onsubmit = function(e) {
-        e.preventDefault();
-        var id = document.getElementById('appt-id').value;
-        var appt = {
-            id: id || Date.now(),
-            clientName: document.getElementById('appt-name').value,
-            date: document.getElementById('appt-date').value,
-            time: document.getElementById('appt-time').value
-        };
-        if (id) {
-            var idx = state.appointments.findIndex(function(a) { return a.id == id; });
-            state.appointments[idx] = appt;
-        } else {
-            state.appointments.push(appt);
-        }
-        saveState(); window.closeModals(); refreshCurrentView();
-    };
 
     initializeData();
 });
