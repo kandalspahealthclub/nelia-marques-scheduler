@@ -1,6 +1,6 @@
 
 // 1. Configuração do Estado Inicial
-const defaultState = {
+var defaultState = {
     appointments: [],
     clients: [
         { id: 1, name: "Maria Garcia", phone: "912345678" }
@@ -13,7 +13,7 @@ const defaultState = {
 };
 
 // 2. Configuração do Firebase
-const firebaseConfig = {
+var firebaseConfig = {
   apiKey: "AIzaSyACxo7xuXIVlCnGvGE_QetIbWhyB6V73PM",
   authDomain: "nelia-marques-scheduler.firebaseapp.com",
   databaseURL: "https://nelia-marques-scheduler-default-rtdb.firebaseio.com",
@@ -25,7 +25,7 @@ const firebaseConfig = {
 };
 
 // Inicialização segura do Firebase
-let db, stateRef;
+var db, stateRef;
 try {
     if (!firebase.apps.length) {
         firebase.initializeApp(firebaseConfig);
@@ -37,14 +37,14 @@ try {
 }
 
 // 3. Gestão de Estado
-let state = JSON.parse(JSON.stringify(defaultState));
-let isSaving = false;
-let isPendingSave = false;
-let selectedServices = [];
+var state = JSON.parse(JSON.stringify(defaultState));
+var isSaving = false;
+var isPendingSave = false;
+var selectedServices = [];
 
 // Indicador de Sincronização em PT-PT
 function updateSyncStatus(status) {
-    let indicator = document.getElementById('sync-indicator');
+    var indicator = document.getElementById('sync-indicator');
     if (!indicator) {
         indicator = document.createElement('div');
         indicator.id = 'sync-indicator';
@@ -57,18 +57,18 @@ function updateSyncStatus(status) {
         indicator.style.opacity = '1';
     } else if (status === 'synced') {
         indicator.innerHTML = '<i class="ph-fill ph-check-circle" style="color:var(--success);"></i> Nuvem Sincronizada';
-        setTimeout(() => { if (!isSaving && !isPendingSave) indicator.style.opacity = '0'; }, 3000);
+        setTimeout(function() { if (!isSaving && !isPendingSave) indicator.style.opacity = '0'; }, 3000);
     } else if (status === 'error') {
         indicator.innerHTML = '<i class="ph-fill ph-warning-circle" style="color:var(--danger);"></i> Erro de ligação';
         indicator.style.opacity = '1';
     }
 }
 
-async function initializeData() {
+async function initializeDatafunction() {
     updateSyncStatus('saving');
     try {
-        const snapshot = await stateRef.once('value');
-        const val = snapshot.val();
+        var snapshot = await stateRef.once('value');
+        var val = snapshot.val();
         
         if (!val) {
             await saveState(); 
@@ -80,12 +80,12 @@ async function initializeData() {
             updateSyncStatus('synced');
         }
 
-        stateRef.on('value', (snapshot) => {
-            const newVal = snapshot.val();
+        stateRef.on('value', function(snapshot) { 
+            var newVal = snapshot.val();
             if (!newVal) return;
             if (document.querySelector('.modal-overlay.open') || isSaving || isPendingSave) return;
             if (JSON.stringify(newVal) !== JSON.stringify(state)) {
-                const activeView = state.currentView;
+                var activeView = state.currentView;
                 state = newVal;
                 state.currentView = activeView;
                 refreshCurrentView();
@@ -99,10 +99,10 @@ async function initializeData() {
     }
 }
 
-function saveState() {
+function saveStatefunction() {
     isPendingSave = true;
     updateSyncStatus('saving');
-    return stateRef.set(state).then(() => {
+    return stateRef.set(state).then(function() { 
         isPendingSave = false;
         updateSyncStatus('synced');
     }).catch(e => {
@@ -112,11 +112,11 @@ function saveState() {
 }
 
 // 4. DOM Elements
-let contentArea, pageTitle, navItems, modalOverlay;
-let btnNewAppt, btnNewService, btnNewClient, btnPrintReport, searchZone, clientSearchInput;
-let appointmentModal, clientModal, serviceModal, messageModal;
+var contentArea, pageTitle, navItems, modalOverlay;
+var btnNewAppt, btnNewService, btnNewClient, btnPrintReport, searchZone, clientSearchInput;
+var appointmentModal, clientModal, serviceModal, messageModal;
 
-function initDOMElements() {
+function initDOMElementsfunction() {
     contentArea = document.getElementById('content-area');
     pageTitle = document.getElementById('page-title');
     navItems = document.querySelectorAll('.nav-item');
@@ -134,13 +134,13 @@ function initDOMElements() {
 }
 
 // 5. Navigation
-function initNavigation() {
+function initNavigationfunction() {
     navItems.forEach(nav => {
         nav.classList.toggle('active', nav.dataset.view === state.currentView);
     });
 
     navItems.forEach(item => {
-        item.addEventListener('click', (e) => {
+        item.addEventListener('click', function(e) { 
             navItems.forEach(nav => nav.classList.remove('active'));
             e.currentTarget.classList.add('active');
             state.currentView = e.currentTarget.dataset.view;
@@ -154,8 +154,8 @@ function initNavigation() {
     });
 }
 
-function refreshCurrentView() {
-    const view = state.currentView || 'dashboard';
+function refreshCurrentViewfunction() {
+    var view = state.currentView || 'dashboard';
     if (btnNewAppt) btnNewAppt.style.display = (view === 'calendar') ? 'inline-flex' : 'none';
     if (btnNewService) btnNewService.style.display = (view === 'services') ? 'inline-flex' : 'none';
     if (btnNewClient) btnNewClient.style.display = (view === 'clients') ? 'inline-flex' : 'none';
@@ -176,26 +176,26 @@ function refreshCurrentView() {
     else if (view === 'birthdays') renderBirthdays();
 }
 
-function goToBirthdays() {
+window.goToBirthdays = function() {
     state.currentView = 'birthdays';
     if (typeof refreshCurrentView === 'function') refreshCurrentView();
     else if (typeof refreshView === 'function') refreshView();
-}
+};
 
 // Helper to get client observations
 function getClientObs(name) {
     if (!name) return '';
     // Robust lookup: try direct match, then strip observations if present
-    let client = state.clients.find(c => c.name === name);
+    var client = state.clients.find(c => c.name === name);
     if (!client && name.includes(' - ')) {
-        const cleanName = name.split(' - ')[0].trim();
+        var cleanName = name.split(' - ')[0].trim();
         client = state.clients.find(c => c.name === cleanName);
     }
     return (client && client.observations) ? `<span style="opacity: 0.5; font-weight: 400; font-size: 0.85rem; margin-left: 8px;">(${client.observations})</span>` : '';
 }
 
 // Helper to get birthdays of the week
-function getWeekBirthdays() {
+function getWeekBirthdaysfunction() {
     var today = new Date();
     var start = new Date(today);
     start.setDate(today.getDate() - today.getDay() + (today.getDay() === 0 ? -6 : 1));
@@ -221,21 +221,21 @@ function getWeekBirthdays() {
 }
 
 // 6. Render Functions (Premium Look Restored)
-function renderDashboard() {
+function renderDashboardfunction() {
     pageTitle.textContent = "Painel";
-    const today = new Date();
-    const tomorrow = new Date();
+    var today = new Date();
+    var tomorrow = new Date();
     tomorrow.setDate(today.getDate() + 1);
-    const todayStr = today.toISOString().split('T')[0];
-    const tomorrowStr = tomorrow.toISOString().split('T')[0];
-    const todayDisplay = today.toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' });
-    const tomorrowDisplay = tomorrow.toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' });
+    var todayStr = today.toISOString().split('T')[0];
+    var tomorrowStr = tomorrow.toISOString().split('T')[0];
+    var todayDisplay = today.toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' });
+    var tomorrowDisplay = tomorrow.toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' });
 
-    const todaysAppts = state.appointments.filter(a => a.date === todayStr);
-    const tomorrowAppts = state.appointments.filter(a => a.date === tomorrowStr);
+    var todaysAppts = state.appointments.filter(a => a.date === todayStr);
+    var tomorrowAppts = state.appointments.filter(a => a.date === tomorrowStr);
 
-    const formatAppt = (appt) => {
-        const types = Array.isArray(appt.type) ? appt.type : [appt.type];
+    var formatAppt = function(appt) { 
+        var types = Array.isArray(appt.type) ? appt.type : [appt.type];
         return `
             <div class="appointment-item">
                 <div class="appt-time">${appt.time}</div>
@@ -246,7 +246,7 @@ function renderDashboard() {
             </div>
         `;
     };
-    const bdays = getWeekBirthdays();
+    var bdays = getWeekBirthdays();
 
     contentArea.innerHTML = `
         <div class="dashboard-grid">
@@ -281,26 +281,32 @@ function renderDashboard() {
     `;
 }
 
-function renderCalendar() {
+function renderCalendarfunction() {
     pageTitle.textContent = "Agenda";
-    const today = new Date().toISOString().split('T')[0];
-    const allSorted = [...state.appointments].sort((a, b) => new Date(a.date + 'T' + a.time) - new Date(b.date + 'T' + b.time));
-    const activeAppts = allSorted.filter(a => a.date >= today);
-    const pastAppts = allSorted.filter(a => a.date < today);
+    var today = new Date().toISOString().split('T')[0];
+    var allSorted = [].concat(state.appointments).sort(function(a, b) { 
+        return new Date(a.date + 'T' + a.time) - new Date(b.date + 'T' + b.time);
+    });
+    var activeAppts = allSorted.filter(function(a) { return a.date >= today; });
+    var pastAppts = allSorted.filter(function(a) { return a.date < today; });
 
-    const renderGrouped = (appts) => {
-        const grouped = {};
-        appts.forEach(appt => {
+    var renderGrouped = function(appts) { 
+        var grouped = {};
+        appts.forEach(function(appt) {
             if (!grouped[appt.date]) grouped[appt.date] = [];
             grouped[appt.date].push(appt);
         });
-        let html = '';
-        for (const [date, dayAppts] of Object.entries(grouped)) {
-            const [y, m, d] = date.split('-');
-            const localDate = new Date(y, m - 1, d);
-            const dateStr = localDate.toLocaleDateString('pt-PT', { weekday: 'long', day: 'numeric', month: 'long' });
+        var html = '';
+        var entries = Object.keys(grouped).sort();
+        for (var i = 0; i < entries.length; i++) {
+            var date = entries[i];
+            var dayAppts = grouped[date];
+            var parts = date.split('-');
+            var localDate = new Date(parts[0], parts[1] - 1, parts[2]);
+            var dateStr = localDate.toLocaleDateString('pt-PT', { weekday: 'long', day: 'numeric', month: 'long' });
             html += `<div style="margin-top: 2rem; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-primary); font-size: 0.9rem; text-transform: capitalize;">${dateStr}</div>`;
-            html += dayAppts.map(appt => `
+            html += dayAppts.map(function(appt) {
+                return `
                 <div class="appointment-item">
                     <div class="appt-time">${appt.time}</div>
                     <div class="appt-details">
@@ -313,12 +319,12 @@ function renderCalendar() {
                         <button type="button" class="js-delete-btn btn-delete" data-type="appointment" data-id="${appt.id}" title="Eliminar"><i class="ph ph-trash"></i></button>
                     </div>
                 </div>
-            `).join('');
+            `;}).join('');
         }
         return html;
     };
 
-    let fullHTML = `<div class="appointments-list">${activeAppts.length > 0 ? renderGrouped(activeAppts) : '<div class="empty-state">Nenhuma marcação futura encontrada.</div>'}</div>`;
+    var fullHTML = `<div class="appointments-list">${activeAppts.length > 0 ? renderGrouped(activeAppts) : '<div class="empty-state">Nenhuma marcação futura encontrada.</div>'}</div>`;
     if (pastAppts.length > 0) {
         fullHTML += `
             <div style="margin-top: 3rem; text-align: center; border-top: 1px dashed var(--border-color); padding-top: 2rem;">
@@ -332,16 +338,16 @@ function renderCalendar() {
         `;
     }
     contentArea.innerHTML = fullHTML;
-    const btnToggle = document.getElementById('btn-toggle-archive');
-    if (btnToggle) btnToggle.onclick = () => { state.showArchive = !state.showArchive; renderCalendar(); };
+    var btnToggle = document.getElementById('btn-toggle-archive');
+    if (btnToggle) btnToggle.onclick = function() { state.showArchive = !state.showArchive; renderCalendar(); };
 }
 
-function renderClients() {
+function renderClientsfunction() {
     pageTitle.textContent = "Clientes";
-    const normalize = (str) => (str || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-    let filteredClients = state.clients;
+    var normalize = function(str) { return (str || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase(); };
+    var filteredClients = state.clients;
     if (state.clientSearchQuery) {
-        const query = normalize(state.clientSearchQuery);
+        var query = normalize(state.clientSearchQuery);
         filteredClients = state.clients.filter(c => normalize(c.name).includes(query) || (c.phone && normalize(c.phone).includes(query)));
     }
     if (filteredClients.length === 0) {
@@ -367,10 +373,10 @@ function renderClients() {
     `).join('')}</div>`;
 }
 
-function renderServices() {
+function renderServicesfunction() {
     pageTitle.textContent = "Serviços";
-    let filtered = state.services;
-    const query = state.serviceSearchQuery ? state.serviceSearchQuery.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") : "";
+    var filtered = state.services;
+    var query = state.serviceSearchQuery ? state.serviceSearchQuery.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") : "";
     if (query) filtered = state.services.filter(s => s.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(query));
     if (filtered.length === 0) {
         contentArea.innerHTML = '<div class="empty-state">Nenhum serviço encontrado.</div>';
@@ -391,25 +397,25 @@ function renderServices() {
     `).join('')}</div>`;
 }
 
-function renderReports() {
+function renderReportsfunction() {
     pageTitle.textContent = "Relatórios";
     if (!state.selectedReportMonth) state.selectedReportMonth = new Date().toISOString().substring(0, 7);
-    const selectedMonth = state.selectedReportMonth;
-    const monthAppts = state.appointments.filter(a => a.date.startsWith(selectedMonth));
-    const serviceSummary = {};
-    let totalRevenue = 0;
+    var selectedMonth = state.selectedReportMonth;
+    var monthAppts = state.appointments.filter(a => a.date.startsWith(selectedMonth));
+    var serviceSummary = {};
+    var totalRevenue = 0;
     monthAppts.forEach(appt => {
-        const types = Array.isArray(appt.type) ? appt.type : [appt.type];
+        var types = Array.isArray(appt.type) ? appt.type : [appt.type];
         types.forEach(serviceName => {
-            const service = state.services.find(s => s.name === serviceName);
-            const price = service ? parseFloat(service.price) : 0;
+            var service = state.services.find(s => s.name === serviceName);
+            var price = service ? parseFloat(service.price) : 0;
             if (!serviceSummary[serviceName]) serviceSummary[serviceName] = { count: 0, revenue: 0 };
             serviceSummary[serviceName].count++;
             serviceSummary[serviceName].revenue += price;
             totalRevenue += price;
         });
     });
-    const displayMonth = new Date(selectedMonth + '-01').toLocaleDateString('pt-PT', { month: 'long', year: 'numeric' });
+    var displayMonth = new Date(selectedMonth + '-01').toLocaleDateString('pt-PT', { month: 'long', year: 'numeric' });
     contentArea.innerHTML = `
         <div class="report-controls no-print" style="margin-bottom: 2rem; display: flex; align-items: center; gap: 1rem; padding: 1rem; background: white; border-radius: 12px;">
             <div style="font-weight: 600; font-size: 0.9rem;">Mês:</div>
@@ -424,11 +430,11 @@ function renderReports() {
             </div>
         </div>
     `;
-    const picker = document.getElementById('report-month-picker');
-    if (picker) picker.onchange = (e) => { state.selectedReportMonth = e.target.value; saveState(); renderReports(); };
+    var picker = document.getElementById('report-month-picker');
+    if (picker) picker.onchange = function(e) { state.selectedReportMonth = e.target.value; saveState(); renderReports(); };
 }
 
-function renderBackup() {
+function renderBackupfunction() {
     pageTitle.textContent = "Backup";
     contentArea.innerHTML = `
         <div class="card" style="max-width: 500px; margin: 2rem auto; text-align: center; padding: 2rem;">
@@ -457,26 +463,29 @@ function openModal(modalEl) {
     modalOverlay.classList.add('open');
     modalOverlay.style.display = 'flex';
 }
-window.closeModals = () => { modalOverlay.classList.remove('open'); setTimeout(() => { modalOverlay.style.display = 'none'; }, 200); };
+window.closeModals = function() { 
+    modalOverlay.classList.remove('open'); 
+    setTimeout(function() { modalOverlay.style.display = 'none'; }, 200); 
+};
 
 // 8. Event Delegation (Restore edit/msg logic)
-function setupEventDelegation() {
-    contentArea.addEventListener('click', (e) => {
-        const editBtn = e.target.closest('.js-edit-btn');
+function setupEventDelegationfunction() {
+    contentArea.addEventListener('click', function(e) { 
+        var editBtn = e.target.closest('.js-edit-btn');
         if (editBtn) triggerEditAppt(editBtn.dataset.id);
-        const editClientBtn = e.target.closest('.js-edit-client-btn');
+        var editClientBtn = e.target.closest('.js-edit-client-btn');
         if (editClientBtn) triggerEditClient(editClientBtn.dataset.id);
-        const editServiceBtn = e.target.closest('.js-edit-service-btn');
+        var editServiceBtn = e.target.closest('.js-edit-service-btn');
         if (editServiceBtn) triggerEditService(editServiceBtn.dataset.id);
-        const msgBtn = e.target.closest('.js-msg-btn');
+        var msgBtn = e.target.closest('.js-msg-btn');
         if (msgBtn) triggerMessage(msgBtn.dataset.name, msgBtn.dataset.time);
-        const delBtn = e.target.closest('.js-delete-btn');
+        var delBtn = e.target.closest('.js-delete-btn');
         if (delBtn) triggerDelete(delBtn.dataset.type, delBtn.dataset.id);
     });
 }
 
 function triggerEditAppt(id) {
-    const appt = state.appointments.find(a => a.id == id);
+    var appt = state.appointments.find(a => a.id == id);
     if (!appt) return;
     document.getElementById('appt-id').value = appt.id;
     document.getElementById('appt-name').value = appt.clientName;
@@ -491,7 +500,7 @@ function triggerEditAppt(id) {
 }
 
 function triggerEditClient(id) {
-    const client = state.clients.find(c => c.id == id);
+    var client = state.clients.find(c => c.id == id);
     if (!client) return;
     document.getElementById('client-id').value = client.id;
     document.getElementById('client-name').value = client.name;
@@ -502,7 +511,7 @@ function triggerEditClient(id) {
 }
 
 function triggerEditService(id) {
-    const service = state.services.find(s => s.id == id);
+    var service = state.services.find(s => s.id == id);
     if (!service) return;
     document.getElementById('service-id').value = service.id;
     document.getElementById('service-name').value = service.name;
@@ -513,28 +522,28 @@ function triggerEditService(id) {
 
 function triggerMessage(name, time) {
     // Robust lookup: try direct match, then strip observations if present (from old data)
-    let client = state.clients.find(c => c.name === name);
+    var client = state.clients.find(c => c.name === name);
     if (!client && name.includes(' - ')) {
-        const cleanName = name.split(' - ')[0].trim();
+        var cleanName = name.split(' - ')[0].trim();
         client = state.clients.find(c => c.name === cleanName);
     }
 
     document.getElementById('msg-recipient').value = client ? client.name : name;
     document.getElementById('msg-phone-hidden').value = client ? client.phone : '';
-    const hourLabel = time || '[Hora]';
-    const firstName = (client ? client.name : name).split(' ')[0];
+    var hourLabel = time || '[Hora]';
+    var firstName = (client ? client.name : name).split(' ')[0];
     document.getElementById('msg-content').value = `Olá, ${firstName}! ✨\nAqui é a Nélia a relembrar que tem marcação amanhã às ${hourLabel}.\nSe não conseguir comparecer, agradeço que me avise.\nMuito obrigada\nAté breve! 😊`;
     openModal(messageModal);
 }
 
-function updateServiceOptions() {
-    const inputType = document.getElementById('appt-type');
+function updateServiceOptionsfunction() {
+    var inputType = document.getElementById('appt-type');
     if (!inputType) return;
     inputType.innerHTML = '<option value="" disabled selected>Adicionar serviço...</option>' + state.services.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
 }
 
-function updateClientDatalist() {
-    const dataList = document.getElementById('client-list');
+function updateClientDatalistfunction() {
+    var dataList = document.getElementById('client-list');
     if (!dataList) return;
     dataList.innerHTML = state.clients.map(c => {
         // Keeping the value as the name only, but showing observations in the dropdown text
@@ -542,28 +551,33 @@ function updateClientDatalist() {
     }).join('');
 }
 
-function renderSelectedServicesList() {
-    const container = document.getElementById('selected-services-container');
-    if (container) container.innerHTML = selectedServices.map((s, i) => `<div style="background:var(--accent-light); padding:4px 12px; border-radius:20px; font-size:0.85rem; display:flex; align-items:center; gap:8px;">${s} <i class="ph ph-x" onclick="removeServiceFromAppt(${i})" style="cursor:pointer"></i></div>`).join('');
+function renderSelectedServicesListfunction() {
+    var container = document.getElementById('selected-services-container');
+    if (container) container.innerHTML = selectedServices.map(function(s, i) { 
+        return `<div style="background:var(--accent-light); padding:4px 12px; border-radius:20px; font-size:0.85rem; display:flex; align-items:center; gap:8px;">${s} <i class="ph ph-x" onclick="removeServiceFromAppt(${i})" style="cursor:pointer"></i></div>`;
+    }).join('');
 }
-window.removeServiceFromAppt = (i) => { selectedServices.splice(i, 1); renderSelectedServicesList(); };
+window.removeServiceFromAppt = function(i) { selectedServices.splice(i, 1); renderSelectedServicesList(); };
 
 function showNotification(msg) {
-    const container = document.getElementById('notification-container');
+    var container = document.getElementById('notification-container');
     if (!container) return;
-    const toast = document.createElement('div'); toast.className = 'toast';
+    var toast = document.createElement('div'); toast.className = 'toast';
     toast.innerHTML = `<i class="ph ph-check-circle"></i><span>${msg}</span>`;
     container.appendChild(toast);
-    setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
+    setTimeout(function() { 
+        toast.style.opacity = '0'; 
+        setTimeout(function() { toast.remove(); }, 300); 
+    }, 3000);
 }
 
 async function brandedConfirm(message) {
-    return new Promise((resolve) => {
-        const modal = document.getElementById('confirm-modal');
-        const overlay = document.getElementById('modal-overlay');
-        const msgEl = document.getElementById('confirm-msg');
-        const btnYes = document.getElementById('confirm-yes');
-        const btnNo = document.getElementById('confirm-no');
+    return new Promise(function(resolve) { 
+        var modal = document.getElementById('confirm-modal');
+        var overlay = document.getElementById('modal-overlay');
+        var msgEl = document.getElementById('confirm-msg');
+        var btnYes = document.getElementById('confirm-yes');
+        var btnNo = document.getElementById('confirm-no');
 
         if (!modal || !overlay) {
             resolve(window.confirm(message));
@@ -572,20 +586,20 @@ async function brandedConfirm(message) {
 
         msgEl.textContent = message;
         
-        const cleanup = (result) => {
+        var cleanup = function(result) { 
             btnYes.onclick = null;
             btnNo.onclick = null;
             modal.style.display = 'none';
             overlay.classList.remove('open');
-            setTimeout(() => { overlay.style.display = 'none'; }, 200);
+            setTimeout(function() { overlay.style.display = 'none'; }, 200);
             resolve(result);
         };
 
-        btnYes.onclick = () => cleanup(true);
-        btnNo.onclick = () => cleanup(false);
+        btnYes.onclick = function() { cleanup(true); };
+        btnNo.onclick = function() { cleanup(false); };
 
         // Abrir
-        document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
+        document.querySelectorAll('.modal').forEach(function(m) { m.style.display = 'none'; });
         modal.style.display = 'block';
         modalOverlay.classList.add('open');
         modalOverlay.style.display = 'flex';
@@ -593,15 +607,15 @@ async function brandedConfirm(message) {
 }
 
 // 9. Startup & Form Listeners
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', function() { 
     initDOMElements();
     initNavigation();
     setupEventDelegation();
 
-    document.querySelectorAll('.close-modal, .close-modal-btn, .close-client-btn, .close-service-btn, .close-msg-btn').forEach(b => b.onclick = closeModals);
-    modalOverlay.onclick = (e) => { if (e.target === modalOverlay) closeModals(); };
+    document.querySelectorAll('.close-modal, .close-modal-btn, .close-client-btn, .close-service-btn, .close-msg-btn').forEach(function(b) { b.onclick = closeModals; });
+    modalOverlay.onclick = function(e) { if (e.target === modalOverlay) closeModals(); };
 
-    document.getElementById('btn-new-appointment').onclick = () => {
+    document.getElementById('btn-new-appointment').onclick = function() { 
         document.getElementById('appointment-form').reset();
         document.getElementById('appt-id').value = '';
         selectedServices = [];
@@ -613,42 +627,42 @@ document.addEventListener('DOMContentLoaded', () => {
         openModal(appointmentModal);
     };
 
-    document.getElementById('btn-new-service').onclick = () => {
+    document.getElementById('btn-new-service').onclick = function() { 
         document.getElementById('service-form').reset();
         document.getElementById('service-id').value = '';
         document.getElementById('service-modal-title').textContent = "Novo Serviço";
         openModal(serviceModal);
     };
 
-    document.getElementById('btn-new-client').onclick = () => {
+    document.getElementById('btn-new-client').onclick = function() { 
         document.getElementById('client-form').reset();
         document.getElementById('client-id').value = '';
         openModal(clientModal);
     };
 
-    document.getElementById('appointment-form').onsubmit = async (e) => {
+    document.getElementById('appointment-form').onsubmit = async function(e) { 
         e.preventDefault();
-        const id = document.getElementById('appt-id').value;
+        var id = document.getElementById('appt-id').value;
         
-        let clientName = document.getElementById('appt-name').value;
+        var clientName = document.getElementById('appt-name').value;
         // Clean name if user selected it with observation suffix from old datalist version
         if (clientName.includes(' - ')) {
             clientName = clientName.split(' - ')[0].trim();
         }
 
-        const newAppt = {
+        var newAppt = {
             id: id || Date.now(),
             clientName: clientName,
             date: document.getElementById('appt-date').value,
             time: document.getElementById('appt-time').value,
             type: selectedServices,
-            price: selectedServices.reduce((acc, sName) => {
-                const s = state.services.find(ser => ser.name === sName);
+            price: selectedServices.reduce(function(acc, sName) { 
+                var s = state.services.find(function(ser) { return ser.name === sName; });
                 return acc + (s ? parseFloat(s.price) : 0);
             }, 0)
         };
         if(id) {
-            const idx = state.appointments.findIndex(a => a.id == id);
+            var idx = state.appointments.findIndex(function(a) { return a.id == id; });
             if(idx !== -1) state.appointments[idx] = newAppt;
         } else {
             state.appointments.push(newAppt);
@@ -656,9 +670,9 @@ document.addEventListener('DOMContentLoaded', () => {
         await saveState(); closeModals(); refreshCurrentView(); showNotification('Guardado!');
     };
 
-function renderBirthdays() {
+function renderBirthdaysfunction() {
     pageTitle.textContent = "Aniversários da Semana";
-    const bdays = getWeekBirthdays();
+    var bdays = getWeekBirthdays();
     
     if (bdays.length === 0) {
         contentArea.innerHTML = `
@@ -695,10 +709,10 @@ function renderBirthdays() {
     `;
 }
 
-    document.getElementById('client-form').onsubmit = async (e) => {
+    document.getElementById('client-form').onsubmit = async function(e) { 
         e.preventDefault();
-        const id = document.getElementById('client-id').value;
-        const cData = {
+        var id = document.getElementById('client-id').value;
+        var cData = {
             id: id || Date.now(),
             name: document.getElementById('client-name').value,
             phone: document.getElementById('client-phone').value,
@@ -706,7 +720,7 @@ function renderBirthdays() {
             observations: document.getElementById('client-observations').value
         };
         if(id) {
-            const idx = state.clients.findIndex(c => c.id == id);
+            var idx = state.clients.findIndex(function(c) { return c.id == id; });
             if(idx !== -1) state.clients[idx] = cData;
         } else {
             state.clients.push(cData);
@@ -714,16 +728,16 @@ function renderBirthdays() {
         await saveState(); closeModals(); refreshCurrentView(); updateClientDatalist(); showNotification('Cliente Guardado!');
     };
 
-    document.getElementById('service-form').onsubmit = async (e) => {
+    document.getElementById('service-form').onsubmit = async function(e) { 
         e.preventDefault();
-        const id = document.getElementById('service-id').value;
-        const sData = {
+        var id = document.getElementById('service-id').value;
+        var sData = {
             id: id || Date.now(),
             name: document.getElementById('service-name').value,
             price: document.getElementById('service-price').value
         };
         if(id) {
-            const idx = state.services.findIndex(s => s.id == id);
+            var idx = state.services.findIndex(function(s) { return s.id == id; });
             if(idx !== -1) state.services[idx] = sData;
         } else {
             state.services.push(sData);
@@ -731,26 +745,26 @@ function renderBirthdays() {
         await saveState(); closeModals(); refreshCurrentView(); showNotification('Serviço Guardado!');
     };
 
-    document.getElementById('btn-add-service-to-appt').onclick = () => {
-        const val = document.getElementById('appt-type').value;
+    document.getElementById('btn-add-service-to-appt').onclick = function() { 
+        var val = document.getElementById('appt-type').value;
         if(val && !selectedServices.includes(val)) { selectedServices.push(val); renderSelectedServicesList(); }
     };
 
-    document.getElementById('btn-send-whatsapp').onclick = () => {
-        const phone = document.getElementById('msg-phone-hidden').value.replace(/\D/g, '');
+    document.getElementById('btn-send-whatsapp').onclick = function() { 
+        var phone = document.getElementById('msg-phone-hidden').value.replace(/\D/g, '');
         if(phone) window.open(`https://wa.me/${phone}?text=${encodeURIComponent(document.getElementById('msg-content').value)}`, '_blank');
         else showNotification('Sem telefone');
     };
 
-    document.getElementById('btn-send-sms').onclick = () => {
-        const phone = document.getElementById('msg-phone-hidden').value.replace(/\D/g, '');
+    document.getElementById('btn-send-sms').onclick = function() { 
+        var phone = document.getElementById('msg-phone-hidden').value.replace(/\D/g, '');
         if(phone) window.location.href = `sms:${phone}?&body=${encodeURIComponent(document.getElementById('msg-content').value)}`;
         else showNotification('Sem telefone');
     };
 
     if (clientSearchInput) {
-        clientSearchInput.addEventListener('input', (e) => {
-            const query = e.target.value;
+        clientSearchInput.addEventListener('input', function(e) { 
+            var query = e.target.value;
             if (state.currentView === 'clients') {
                 state.clientSearchQuery = query;
                 renderClients();
@@ -764,18 +778,18 @@ function renderBirthdays() {
     initializeData();
 });
 
-window.downloadBackup = () => {
-    const blob = new Blob([JSON.stringify(state, null, 2)], {type: 'application/json'});
-    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'backup_agenda.json'; a.click();
+window.downloadBackup = function() { 
+    var blob = new Blob([JSON.stringify(state, null, 2)], {type: 'application/json'});
+    var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'backup_agenda.json'; a.click();
 };
 
-window.uploadBackup = () => {
-    const input = document.createElement('input'); input.type = 'file'; input.accept = '.json';
-    input.onchange = async (e) => {
-        const file = e.target.files[0]; if(!file) return;
-        const reader = new FileReader();
-        reader.onload = async (ev) => {
-            const data = JSON.parse(ev.target.result);
+window.uploadBackup = function() { 
+    var input = document.createElement('input'); input.type = 'file'; input.accept = '.json';
+    input.onchange = async function(e) { 
+        var file = e.target.files[0]; if(!file) return;
+        var reader = new FileReader();
+        reader.onload = async function(ev) { 
+            var data = JSON.parse(ev.target.result);
             if(data.clients && data.appointments) { state = data; await saveState(); refreshCurrentView(); showNotification('Restaurado!'); }
         };
         reader.readAsText(file);
