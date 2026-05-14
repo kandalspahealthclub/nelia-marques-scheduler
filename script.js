@@ -176,6 +176,12 @@ function refreshCurrentView() {
     else if (view === 'birthdays') renderBirthdays();
 }
 
+function goToBirthdays() {
+    state.currentView = 'birthdays';
+    if (typeof refreshCurrentView === 'function') refreshCurrentView();
+    else if (typeof refreshView === 'function') refreshView();
+}
+
 // Helper to get client observations
 function getClientObs(name) {
     if (!name) return '';
@@ -189,25 +195,30 @@ function getClientObs(name) {
 }
 
 // Helper to get birthdays of the week
-const getWeekBirthdays = () => {
-    const today = new Date();
-    const start = new Date(today);
+function getWeekBirthdays() {
+    var today = new Date();
+    var start = new Date(today);
     start.setDate(today.getDate() - today.getDay() + (today.getDay() === 0 ? -6 : 1));
-    const weekDates = [];
-    for (let i = 0; i < 7; i++) {
-        const d = new Date(start);
+    var weekDates = [];
+    for (var i = 0; i < 7; i++) {
+        var d = new Date(start);
         d.setDate(start.getDate() + i);
         weekDates.push({ m: d.getMonth() + 1, d: d.getDate(), s: d.toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' }) });
     }
-    return state.clients.filter(c => {
+    return state.clients.filter(function(c) {
         if (!c.birthdate) return false;
-        const [by, bm, bd] = c.birthdate.split('-').map(Number);
-        return weekDates.some(wd => wd.m === bm && wd.d === bd);
-    }).map(c => {
-        const [by, bm, bd] = c.birthdate.split('-').map(Number);
-        return { ...c, dayDisplay: weekDates.find(w => w.m === bm && w.d === bd).s };
+        var parts = c.birthdate.split('-');
+        var bm = parseInt(parts[1], 10);
+        var bd = parseInt(parts[2], 10);
+        return weekDates.some(function(wd) { return wd.m === bm && wd.d === bd; });
+    }).map(function(c) {
+        var parts = c.birthdate.split('-');
+        var bm = parseInt(parts[1], 10);
+        var bd = parseInt(parts[2], 10);
+        var wd = weekDates.find(function(w) { return w.m === bm && w.d === bd; });
+        return { name: c.name, dayDisplay: wd.s, phone: c.phone };
     });
-};
+}
 
 // 6. Render Functions (Premium Look Restored)
 function renderDashboard() {
@@ -247,7 +258,7 @@ function renderDashboard() {
                 <div class="stat-header"><span class="stat-icon"><i class="ph ph-users"></i></span></div>
                 <div class="stat-info"><span class="label">Total de Clientes</span><span class="value">${state.clients.length}</span></div>
             </div>
-            <div class="card stat-card" style="border-color: var(--rose); cursor: pointer;" onclick="state.currentView='birthdays'; refreshCurrentView();">
+            <div class="card stat-card" style="border-color: var(--rose); cursor: pointer;" onclick="goToBirthdays()">
                 <div class="stat-header"><span class="stat-icon" style="background: var(--rose);"><i class="ph ph-cake"></i></span></div>
                 <div class="stat-info">
                     <span class="label">Aniversários da Semana</span>
