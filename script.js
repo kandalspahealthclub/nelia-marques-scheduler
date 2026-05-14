@@ -201,6 +201,25 @@ function renderDashboard() {
     const todaysAppts = state.appointments.filter(a => a.date === todayStr);
     const tomorrowAppts = state.appointments.filter(a => a.date === tomorrowStr);
 
+    const getWeekBirthdays = () => {
+        const today = new Date();
+        const start = new Date(today);
+        start.setDate(today.getDate() - today.getDay() + (today.getDay() === 0 ? -6 : 1));
+        const weekDates = [];
+        for (let i = 0; i < 7; i++) {
+            const d = new Date(start);
+            d.setDate(start.getDate() + i);
+            weekDates.push({ m: d.getMonth() + 1, d: d.getDate(), s: d.toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' }) });
+        }
+        return state.clients.filter(c => {
+            if (!c.birthdate) return false;
+            const [by, bm, bd] = c.birthdate.split('-').map(Number);
+            return weekDates.some(wd => wd.m === bm && wd.d === bd);
+        }).map(c => {
+            const [by, bm, bd] = c.birthdate.split('-').map(Number);
+            return { ...c, dayDisplay: weekDates.find(w => w.m === bm && w.d === bd).s };
+        });
+    };
     const formatAppt = (appt) => {
         const types = Array.isArray(appt.type) ? appt.type : [appt.type];
         return `
@@ -213,9 +232,10 @@ function renderDashboard() {
             </div>
         `;
     };
+    const bdays = getWeekBirthdays();
 
     contentArea.innerHTML = `
-        <div class="dashboard-grid">
+        <div class="dashboard-grid" style="grid-template-columns: repeat(3, 1fr);">
             <div class="card stat-card">
                 <div class="stat-header"><span class="stat-icon"><i class="ph ph-trend-up"></i></span></div>
                 <div class="stat-info"><span class="label">Total de Marcações</span><span class="value">${state.appointments.length}</span></div>
@@ -223,6 +243,15 @@ function renderDashboard() {
             <div class="card stat-card">
                 <div class="stat-header"><span class="stat-icon"><i class="ph ph-users"></i></span></div>
                 <div class="stat-info"><span class="label">Total de Clientes</span><span class="value">${state.clients.length}</span></div>
+            </div>
+            <div class="card stat-card" style="border-color: var(--rose);">
+                <div class="stat-header"><span class="stat-icon" style="background: var(--rose);"><i class="ph ph-cake"></i></span></div>
+                <div class="stat-info">
+                    <span class="label">Aniversários da Semana</span>
+                    <div style="max-height: 50px; overflow-y: auto; font-size: 0.85rem;">
+                        ${bdays.length > 0 ? bdays.map(b => `<div style="color: var(--text-primary); font-weight: 600;">${b.name} (${b.dayDisplay})</div>`).join('') : '<span class="value" style="font-size: 1.5rem;">0</span>'}
+                    </div>
+                </div>
             </div>
         </div>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
