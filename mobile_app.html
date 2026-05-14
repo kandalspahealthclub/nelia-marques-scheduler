@@ -711,7 +711,7 @@
         var state = JSON.parse(JSON.stringify(defaultState));
         var selectedServicesMobile = []; // Temporary storage for services in the current modal
         // Cache Buster v8.1
-        var APP_VERSION = '8.1';
+        var APP_VERSION = '8.2';
         if (localStorage.getItem('app_ver') !== APP_VERSION) {
             localStorage.setItem('app_ver', APP_VERSION);
             // Optional: force reload logic or just let natural cache expire
@@ -932,7 +932,7 @@
                 '<div class="dashboard-grid">' +
                 '<div class="card"><div class="stat-icon"><i class="ph ph-trend-up"></i></div><div class="stat-info"><div class="label">Hoje</div><div class="value">' + appts.length + '</div></div></div>' +
                 '<div class="card"><div class="stat-icon"><i class="ph ph-users"></i></div><div class="stat-info"><div class="label">Total</div><div class="value">' + state.clients.length + '</div></div></div>' +
-                '<div class="card" style="border-color:var(--rose);"><div class="stat-icon" style="background:var(--rose);"><i class="ph ph-cake"></i></div><div class="stat-info"><div class="label">Aniversários</div><div style="font-size:0.8rem; font-weight:600; color:var(--text-primary); margin-top:4px;">' + (bdays.length > 0 ? bdays.map(function(b){ return b.name + ' (' + b.dayDisplay + ')'; }).join('<br>') : '0') + '</div></div></div>' +
+                '<div class="card" style="border-color:var(--rose);"><div class="stat-icon" style="background:var(--rose);"><i class="ph ph-cake"></i></div><div class="stat-info"><div class="label">Aniversários</div><div style="font-size:0.75rem; font-weight:600; color:var(--text-primary); margin-top:4px; max-height:60px; overflow-y:auto;">' + (bdays.length > 0 ? bdays.map(function(b){ return b.name + ' <span style="font-weight:400; opacity:0.7;">(' + b.dayDisplay + ')</span>'; }).join('<br>') : '0') + '</div></div></div>' +
                 '</div>';
 
             html += '<div class="section-header" style="margin-top:1.5rem;"><h3>Agenda de Hoje</h3><span class="date-badge">' + todayDisplay + '</span></div>' +

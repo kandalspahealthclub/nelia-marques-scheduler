@@ -248,8 +248,8 @@ function renderDashboard() {
                 <div class="stat-header"><span class="stat-icon" style="background: var(--rose);"><i class="ph ph-cake"></i></span></div>
                 <div class="stat-info">
                     <span class="label">Aniversários da Semana</span>
-                    <div style="max-height: 50px; overflow-y: auto; font-size: 0.85rem;">
-                        ${bdays.length > 0 ? bdays.map(b => `<div style="color: var(--text-primary); font-weight: 600;">${b.name} (${b.dayDisplay})</div>`).join('') : '<span class="value" style="font-size: 1.5rem;">0</span>'}
+                    <div style="max-height: 100px; overflow-y: auto; font-size: 0.8rem; line-height: 1.3;">
+                        ${bdays.length > 0 ? bdays.map(b => `<div style="color: var(--text-primary); font-weight: 600; margin-bottom: 2px;">${b.name} <span style="font-weight:400; opacity:0.8;">(${b.dayDisplay})</span></div>`).join('') : '<span class="value" style="font-size: 1.25rem;">0</span>'}
                     </div>
                 </div>
             </div>
