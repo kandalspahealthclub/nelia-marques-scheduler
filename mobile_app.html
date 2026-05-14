@@ -961,7 +961,8 @@
             }
             contentArea.innerHTML = filtered.map(function (c) {
                 var obsDisplay = (c.observations && c.observations.trim().length > 0) ? '<div style="font-size:0.8rem; color:var(--text-secondary); margin-top:6px; padding-top:4px; border-top:1px dashed #eee;">' + c.observations + '</div>' : '';
-                return '<div class="appointment-item"><div class="appt-details" style="flex:1;"><span class="client-name">' + c.name + '</span><span class="appt-type"><i class="ph ph-phone"></i> ' + (c.phone || 'Sem tel') + '</span>' + obsDisplay + '</div><div class="appt-actions"><button onclick="openMsgModal(\'' + (c.name || '') + '\',\'\')"><i class="ph ph-paper-plane-tilt"></i></button><button onclick="editClient(' + c.id + ')" style="color:var(--accent);"><i class="ph ph-pencil-simple"></i></button><button onclick="del(\'client\',' + c.id + ')" style="color:var(--rose);"><i class="ph ph-trash"></i></button></div></div>';
+                var birthDisplay = c.birthdate ? ' • <i class="ph ph-cake"></i> ' + c.birthdate.split('-').reverse().join('/') : '';
+                return '<div class="appointment-item"><div class="appt-details" style="flex:1;"><span class="client-name">' + c.name + '</span><span class="appt-type"><i class="ph ph-phone"></i> ' + (c.phone || 'Sem tel') + birthDisplay + '</span>' + obsDisplay + '</div><div class="appt-actions"><button onclick="openMsgModal(\'' + (c.name || '') + '\',\'\')"><i class="ph ph-paper-plane-tilt"></i></button><button onclick="editClient(' + c.id + ')" style="color:var(--accent);"><i class="ph ph-pencil-simple"></i></button><button onclick="del(\'client\',' + c.id + ')" style="color:var(--rose);"><i class="ph ph-trash"></i></button></div></div>';
             }).join('');
         }
         function renderServices() {
@@ -1200,6 +1201,7 @@
                 document.getElementById('modal-content-body').innerHTML =
                     '<div class="form-group"><label>Nome</label><input id="inp-c-name-new" placeholder="Nome completo"></div>' +
                     '<div class="form-group"><label>Telefone</label><input id="inp-c-phone-new" placeholder="11999999999" type="tel"></div>' +
+                    '<div class="form-group"><label>Data de Nascimento</label><input id="inp-c-birth-new" type="date"></div>' +
                     '<div class="form-group"><label>Observações</label><textarea id="inp-c-obs-new" placeholder="Notas sobre o cliente..."></textarea></div>' +
                     '<button class="btn btn-primary" style="width:100%;" onclick="doSaveClient()">Salvar</button>';
                 modalOverlay.classList.add('open');
@@ -1214,6 +1216,7 @@
             document.getElementById('modal-content-body').innerHTML =
                 '<div class="form-group"><label>Nome</label><input id="inp-c-name-new" value="' + (c.name || '') + '" placeholder="Nome completo"></div>' +
                 '<div class="form-group"><label>Telefone</label><input id="inp-c-phone-new" value="' + (c.phone || '') + '" placeholder="11999999999" type="tel"></div>' +
+                '<div class="form-group"><label>Data de Nascimento</label><input id="inp-c-birth-new" value="' + (c.birthdate || '') + '" type="date"></div>' +
                 '<div class="form-group"><label>Observações</label><textarea id="inp-c-obs-new" placeholder="Notas sobre o cliente...">' + (c.observations || '') + '</textarea></div>' +
                 '<button class="btn btn-primary" style="width:100%;" onclick="doSaveClient(' + id + ')">Salvar Alterações</button>';
             modalOverlay.classList.add('open');
@@ -1222,14 +1225,15 @@
         window.doSaveClient = function (id) {
             var name = document.getElementById('inp-c-name-new').value;
             var phone = document.getElementById('inp-c-phone-new').value;
+            var birth = document.getElementById('inp-c-birth-new').value;
             var obs = document.getElementById('inp-c-obs-new').value;
 
             if (name) {
                 if (id) {
                     var c = state.clients.find(function (x) { return x.id === id; });
-                    if (c) { c.name = name; c.phone = phone; c.observations = obs; }
+                    if (c) { c.name = name; c.phone = phone; c.birthdate = birth; c.observations = obs; }
                 } else {
-                    state.clients.push({ id: Date.now(), name: name, phone: phone, observations: obs });
+                    state.clients.push({ id: Date.now(), name: name, phone: phone, birthdate: birth, observations: obs });
                 }
                 saveState(); modalOverlay.classList.remove('open'); refreshView();
             }

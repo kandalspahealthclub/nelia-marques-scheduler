@@ -309,7 +309,10 @@ function renderClients() {
         <div class="appointment-item">
             <div class="appt-details">
                 <span class="client-name">${client.name}</span>
-                <span class="appt-type"><i class="ph ph-phone"></i> ${client.phone || 'Sem contacto'}</span>
+                <span class="appt-type">
+                    <span><i class="ph ph-phone"></i> ${client.phone || 'Sem contacto'}</span>
+                    ${client.birthdate ? `<span style="margin-left: 15px;"><i class="ph ph-cake"></i> ${client.birthdate.split('-').reverse().join('/')}</span>` : ''}
+                </span>
                 ${(client.observations) ? `<div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 6px; padding-top: 4px; border-top: 1px dashed var(--border-color);">${client.observations}</div>` : ''}
             </div>
             <div class="appt-actions">
@@ -450,6 +453,7 @@ function triggerEditClient(id) {
     document.getElementById('client-id').value = client.id;
     document.getElementById('client-name').value = client.name;
     document.getElementById('client-phone').value = client.phone || '';
+    document.getElementById('client-birthdate').value = client.birthdate || '';
     document.getElementById('client-observations').value = client.observations || '';
     openModal(clientModal);
 }
@@ -616,6 +620,7 @@ document.addEventListener('DOMContentLoaded', () => {
             id: id || Date.now(),
             name: document.getElementById('client-name').value,
             phone: document.getElementById('client-phone').value,
+            birthdate: document.getElementById('client-birthdate').value,
             observations: document.getElementById('client-observations').value
         };
         if(id) {
