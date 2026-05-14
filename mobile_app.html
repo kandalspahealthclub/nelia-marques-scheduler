@@ -861,6 +861,7 @@
             else if (view === 'clients') renderClients();
             else if (view === 'services') renderServices();
             else if (view === 'reports') renderReports();
+            else if (view === 'birthdays') renderBirthdays();
         }
 
         function brandedConfirm(message, callback) {
@@ -932,7 +933,7 @@
                 '<div class="dashboard-grid">' +
                 '<div class="card"><div class="stat-icon"><i class="ph ph-trend-up"></i></div><div class="stat-info"><div class="label">Hoje</div><div class="value">' + appts.length + '</div></div></div>' +
                 '<div class="card"><div class="stat-icon"><i class="ph ph-users"></i></div><div class="stat-info"><div class="label">Total</div><div class="value">' + state.clients.length + '</div></div></div>' +
-                '<div class="card" style="border-color:var(--rose);"><div class="stat-icon" style="background:var(--rose);"><i class="ph ph-cake"></i></div><div class="stat-info"><div class="label">Aniversários</div><div style="font-size:0.75rem; font-weight:600; color:var(--text-primary); margin-top:4px; max-height:60px; overflow-y:auto;">' + (bdays.length > 0 ? bdays.map(function(b){ return b.name + ' <span style="font-weight:400; opacity:0.7;">(' + b.dayDisplay + ')</span>'; }).join('<br>') : '0') + '</div></div></div>' +
+                '<div class="card" style="border-color:var(--rose); cursor:pointer;" onclick="state.currentView=\'birthdays\'; refreshView();"><div class="stat-icon" style="background:var(--rose);"><i class="ph ph-cake"></i></div><div class="stat-info"><div class="label">Aniversários</div><div style="font-size:0.75rem; font-weight:600; color:var(--text-primary); margin-top:4px; max-height:60px; overflow-y:auto;">' + (bdays.length > 0 ? bdays.map(function(b){ return b.name + ' <span style="font-weight:400; opacity:0.7;">(' + b.dayDisplay + ')</span>'; }).join('<br>') : '0') + '</div></div></div>' +
                 '</div>';
 
             html += '<div class="section-header" style="margin-top:1.5rem;"><h3>Agenda de Hoje</h3><span class="date-badge">' + todayDisplay + '</span></div>' +
@@ -1119,6 +1120,27 @@
         function renderApptItem(a) {
             var types = Array.isArray(a.type) ? a.type.join(', ') : a.type;
             return '<div class="appointment-item"><div class="appt-time">' + a.time + '</div><div class="appt-details" style="flex:1;"><span class="client-name">' + a.clientName + getClientObs(a.clientName) + '</span><span class="appt-type"><i class="ph ph-calendar"></i> ' + a.date + ' • ' + types + '</span></div><div class="appt-actions"><button onclick="openMsgModal(\'' + (a.clientName || '') + '\',\'' + a.time + '\')"><i class="ph ph-paper-plane-tilt"></i></button><button onclick="del(\'appointment\',' + a.id + ')" style="color:var(--rose);"><i class="ph ph-trash"></i></button></div></div>';
+        }
+
+        function renderBirthdays() {
+            pageTitle.textContent = "Aniversários da Semana";
+            var bdays = getWeekBirthdays();
+
+            var html = '<div style="margin-bottom: 1.5rem;">' +
+                '<button class="btn btn-ghost" onclick="state.currentView=\'dashboard\'; refreshView();" style="background:#f1f5f9; padding:0.6rem 1rem; border-radius:8px; border:none; display:flex; align-items:center; gap:0.5rem; font-weight:600; color:var(--text-secondary);">' +
+                '<i class="ph ph-arrow-left"></i> Voltar ao Painel</button></div>';
+
+            if (bdays.length === 0) {
+                html += '<div style="text-align:center; padding:3rem 1rem; color:#aaa;">' +
+                    '<i class="ph ph-balloon" style="font-size:3rem; color:var(--rose); margin-bottom:1rem; display:block;"></i>' +
+                    'Nenhum aniversário esta semana.</div>';
+            } else {
+                html += '<div class="appointments-list">' +
+                    bdays.map(function (c) {
+                        return '<div class="appointment-item" style="border-left: 4px solid var(--rose);"><div class="appt-details" style="flex:1;"><span class="client-name">' + c.name + '</span><span class="appt-type"><i class="ph ph-cake"></i> ' + c.dayDisplay + ' • <i class="ph ph-phone"></i> ' + (c.phone || 'Sem tel') + '</span></div><div class="appt-actions"><button onclick="openMsgModal(\'' + (c.name || '') + '\',\'\')"><i class="ph ph-paper-plane-tilt"></i></button></div></div>';
+                    }).join('') + '</div>';
+            }
+            contentArea.innerHTML = html;
         }
 
         // ACTIONS

@@ -173,6 +173,7 @@ function refreshCurrentView() {
     else if (view === 'services') renderServices();
     else if (view === 'reports') renderReports();
     else if (view === 'backup') renderBackup();
+    else if (view === 'birthdays') renderBirthdays();
 }
 
 // Helper to get client observations
@@ -244,7 +245,7 @@ function renderDashboard() {
                 <div class="stat-header"><span class="stat-icon"><i class="ph ph-users"></i></span></div>
                 <div class="stat-info"><span class="label">Total de Clientes</span><span class="value">${state.clients.length}</span></div>
             </div>
-            <div class="card stat-card" style="border-color: var(--rose);">
+            <div class="card stat-card" style="border-color: var(--rose); cursor: pointer;" onclick="state.currentView='birthdays'; refreshCurrentView();">
                 <div class="stat-header"><span class="stat-icon" style="background: var(--rose);"><i class="ph ph-cake"></i></span></div>
                 <div class="stat-info">
                     <span class="label">Aniversários da Semana</span>
@@ -641,6 +642,45 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         await saveState(); closeModals(); refreshCurrentView(); showNotification('Guardado!');
     };
+
+function renderBirthdays() {
+    pageTitle.textContent = "Aniversários da Semana";
+    const bdays = getWeekBirthdays();
+    
+    if (bdays.length === 0) {
+        contentArea.innerHTML = `
+            <div class="empty-state">
+                <i class="ph ph-balloon" style="font-size: 3rem; margin-bottom: 1rem; color: var(--rose);"></i>
+                <p>Nenhum aniversário esta semana.</p>
+                <button class="btn btn-ghost" onclick="state.currentView='dashboard'; refreshCurrentView();" style="margin-top: 1rem;">Voltar ao Painel</button>
+            </div>`;
+        return;
+    }
+    
+    contentArea.innerHTML = `
+        <div style="margin-bottom: 1.5rem;">
+            <button class="btn btn-ghost" onclick="state.currentView='dashboard'; refreshCurrentView();">
+                <i class="ph ph-arrow-left"></i> Voltar ao Painel
+            </button>
+        </div>
+        <div class="appointments-list">
+            ${bdays.map(client => `
+                <div class="appointment-item" style="border-left: 4px solid var(--rose);">
+                    <div class="appt-details">
+                        <span class="client-name">${client.name}</span>
+                        <span class="appt-type">
+                            <span><i class="ph ph-cake"></i> ${client.dayDisplay}</span>
+                            <span style="margin-left: 15px;"><i class="ph ph-phone"></i> ${client.phone || 'Sem contacto'}</span>
+                        </span>
+                    </div>
+                    <div class="appt-actions">
+                        <button onclick="openMsgModal('${client.name}', '')" title="Enviar Mensagem de Parabéns"><i class="ph ph-paper-plane-tilt"></i></button>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
 
     document.getElementById('client-form').onsubmit = async (e) => {
         e.preventDefault();
