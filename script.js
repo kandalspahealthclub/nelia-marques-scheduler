@@ -188,6 +188,27 @@ function getClientObs(name) {
     return (client && client.observations) ? `<span style="opacity: 0.5; font-weight: 400; font-size: 0.85rem; margin-left: 8px;">(${client.observations})</span>` : '';
 }
 
+// Helper to get birthdays of the week
+const getWeekBirthdays = () => {
+    const today = new Date();
+    const start = new Date(today);
+    start.setDate(today.getDate() - today.getDay() + (today.getDay() === 0 ? -6 : 1));
+    const weekDates = [];
+    for (let i = 0; i < 7; i++) {
+        const d = new Date(start);
+        d.setDate(start.getDate() + i);
+        weekDates.push({ m: d.getMonth() + 1, d: d.getDate(), s: d.toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' }) });
+    }
+    return state.clients.filter(c => {
+        if (!c.birthdate) return false;
+        const [by, bm, bd] = c.birthdate.split('-').map(Number);
+        return weekDates.some(wd => wd.m === bm && wd.d === bd);
+    }).map(c => {
+        const [by, bm, bd] = c.birthdate.split('-').map(Number);
+        return { ...c, dayDisplay: weekDates.find(w => w.m === bm && w.d === bd).s };
+    });
+};
+
 // 6. Render Functions (Premium Look Restored)
 function renderDashboard() {
     pageTitle.textContent = "Painel";
@@ -202,25 +223,6 @@ function renderDashboard() {
     const todaysAppts = state.appointments.filter(a => a.date === todayStr);
     const tomorrowAppts = state.appointments.filter(a => a.date === tomorrowStr);
 
-    const getWeekBirthdays = () => {
-        const today = new Date();
-        const start = new Date(today);
-        start.setDate(today.getDate() - today.getDay() + (today.getDay() === 0 ? -6 : 1));
-        const weekDates = [];
-        for (let i = 0; i < 7; i++) {
-            const d = new Date(start);
-            d.setDate(start.getDate() + i);
-            weekDates.push({ m: d.getMonth() + 1, d: d.getDate(), s: d.toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' }) });
-        }
-        return state.clients.filter(c => {
-            if (!c.birthdate) return false;
-            const [by, bm, bd] = c.birthdate.split('-').map(Number);
-            return weekDates.some(wd => wd.m === bm && wd.d === bd);
-        }).map(c => {
-            const [by, bm, bd] = c.birthdate.split('-').map(Number);
-            return { ...c, dayDisplay: weekDates.find(w => w.m === bm && w.d === bd).s };
-        });
-    };
     const formatAppt = (appt) => {
         const types = Array.isArray(appt.type) ? appt.type : [appt.type];
         return `

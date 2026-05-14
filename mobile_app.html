@@ -808,6 +808,31 @@
             return (client && client.observations) ? '<span style="opacity: 0.5; font-weight: 400; font-size: 0.8rem; margin-left: 6px;">(' + client.observations + ')</span>' : '';
         }
 
+        function getWeekBirthdays() {
+            var today = new Date();
+            var start = new Date(today);
+            start.setDate(today.getDate() - today.getDay() + (today.getDay() === 0 ? -6 : 1));
+            var weekDates = [];
+            for (var i = 0; i < 7; i++) {
+                var d = new Date(start);
+                d.setDate(start.getDate() + i);
+                weekDates.push({ m: d.getMonth() + 1, d: d.getDate(), s: d.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' }) });
+            }
+            return state.clients.filter(function(c) {
+                if (!c.birthdate) return false;
+                var parts = c.birthdate.split('-');
+                var bm = parseInt(parts[1], 10);
+                var bd = parseInt(parts[2], 10);
+                return weekDates.some(function(wd) { return wd.m === bm && wd.d === bd; });
+            }).map(function(c) {
+                var parts = c.birthdate.split('-');
+                var bm = parseInt(parts[1], 10);
+                var bd = parseInt(parts[2], 10);
+                var wd = weekDates.find(function(w) { return w.m === bm && w.d === bd; });
+                return { name: c.name, dayDisplay: wd.s, phone: c.phone };
+            });
+        }
+
         var contentArea = document.getElementById('content-area');
         var pageTitle = document.getElementById('page-title');
         var navItems = document.querySelectorAll('.nav-item');
@@ -899,30 +924,6 @@
             var appts = state.appointments.filter(function (a) { return a.date === todayStr; });
             var tomorrowAppts = state.appointments.filter(function (a) { return a.date === tomorrowStr; });
 
-            function getWeekBirthdays() {
-                var today = new Date();
-                var start = new Date(today);
-                start.setDate(today.getDate() - today.getDay() + (today.getDay() === 0 ? -6 : 1));
-                var weekDates = [];
-                for (var i = 0; i < 7; i++) {
-                    var d = new Date(start);
-                    d.setDate(start.getDate() + i);
-                    weekDates.push({ m: d.getMonth() + 1, d: d.getDate(), s: d.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' }) });
-                }
-                return state.clients.filter(function(c) {
-                    if (!c.birthdate) return false;
-                    var parts = c.birthdate.split('-');
-                    var bm = parseInt(parts[1], 10);
-                    var bd = parseInt(parts[2], 10);
-                    return weekDates.some(function(wd) { return wd.m === bm && wd.d === bd; });
-                }).map(function(c) {
-                    var parts = c.birthdate.split('-');
-                    var bm = parseInt(parts[1], 10);
-                    var bd = parseInt(parts[2], 10);
-                    var wd = weekDates.find(function(w) { return w.m === bm && w.d === bd; });
-                    return { name: c.name, dayDisplay: wd.s };
-                });
-            }
             var bdays = getWeekBirthdays();
 
             var logoSrc = "logo.png?t=" + new Date().getTime();
