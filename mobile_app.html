@@ -648,7 +648,7 @@
 
     <div class="app-container">
         <aside class="sidebar">
-            <div class="brand">
+            <div class="brand" style="cursor: pointer;" onclick="state.currentView='dashboard'; refreshView();">
                 <img src="logo.png" alt="Logo" class="sidebar-logo">
             </div>
             <nav class="nav-menu">
@@ -725,6 +725,7 @@
                 if (xhr.status === 200) {
                     try {
                         state = JSON.parse(xhr.responseText);
+                        state.currentView = 'dashboard'; // Painel como Homepage
                         state.clients = state.clients || [];
                         var unique = [];
                         var seen = new Set();

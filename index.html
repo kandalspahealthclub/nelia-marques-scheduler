@@ -23,7 +23,7 @@
 <body>
     <div class="app-container">
         <aside class="sidebar">
-            <div class="brand">
+            <div class="brand" style="cursor: pointer;" onclick="state.currentView='dashboard'; saveState(); refreshCurrentView();">
                 <img src="logo.png" alt="Logo" class="sidebar-logo">
             </div>
             <nav class="nav-menu">

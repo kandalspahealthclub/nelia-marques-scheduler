@@ -74,6 +74,7 @@ async function initializeData() {
             await saveState(); 
         } else {
             state = val;
+            state.currentView = 'dashboard'; // Forçar Painel como homepage ao iniciar
             refreshCurrentView();
             updateClientDatalist();
             updateSyncStatus('synced');
