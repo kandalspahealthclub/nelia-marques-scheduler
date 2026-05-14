@@ -1,268 +1,731 @@
 
-// 1. Estado e Configuração
-var defaultState = {
+// 1. Configuração do Estado Inicial
+const defaultState = {
     appointments: [],
-    clients: [],
-    services: [],
+    clients: [
+        { id: 1, name: "Maria Garcia", phone: "912345678" }
+    ],
+    services: [
+        { id: 1, name: "Consulta", duration: 30, price: 150 }
+    ],
     messages: [],
     currentView: 'dashboard'
 };
 
-var state = JSON.parse(JSON.stringify(defaultState));
-var isSaving = false;
-var isPendingSave = false;
+// 2. Configuração do Firebase
+const firebaseConfig = {
+  apiKey: "AIzaSyACxo7xuXIVlCnGvGE_QetIbWhyB6V73PM",
+  authDomain: "nelia-marques-scheduler.firebaseapp.com",
+  databaseURL: "https://nelia-marques-scheduler-default-rtdb.firebaseio.com",
+  projectId: "nelia-marques-scheduler",
+  storageBucket: "nelia-marques-scheduler.firebasestorage.app",
+  messagingSenderId: "898663480243",
+  appId: "1:898663480243:web:1690883d4bd926ac2229c6",
+  measurementId: "G-6G7N5J5VPN"
+};
 
-// DOM Elements
-var contentArea, pageTitle, navItems, appointmentModal, serviceModal, clientModal, messageModal, modalOverlay, clientSearchInput;
+// Inicialização segura do Firebase
+let db, stateRef;
+try {
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    db = firebase.database();
+    stateRef = db.ref('state');
+} catch (e) {
+    console.error("Erro ao ligar ao Firebase:", e);
+}
 
+// 3. Gestão de Estado
+let state = JSON.parse(JSON.stringify(defaultState));
+let isSaving = false;
+let isPendingSave = false;
+let selectedServices = [];
+
+// Indicador de Sincronização em PT-PT
 function updateSyncStatus(status) {
-    var indicator = document.getElementById('sync-indicator');
+    let indicator = document.getElementById('sync-indicator');
     if (!indicator) {
         indicator = document.createElement('div');
         indicator.id = 'sync-indicator';
-        indicator.style = 'position:fixed; bottom:20px; right:20px; font-size:0.75rem; background:white; padding:4px 10px; border-radius:20px; box-shadow:0 2px 10px rgba(0,0,0,0.1); z-index:9999; border:1px solid #eee; transition: opacity 0.3s;';
+        indicator.style = 'position:fixed; bottom:20px; right:20px; font-size:0.75rem; color:var(--text-tertiary); background:white; padding:4px 10px; border-radius:20px; box-shadow:var(--shadow-md); z-index:9999; display:flex; align-items:center; gap:6px; border:1px solid var(--border-color); pointer-events:none; transition: opacity 0.3s;';
         document.body.appendChild(indicator);
     }
-    if (status === 'saving') { indicator.innerHTML = 'A guardar...'; indicator.style.opacity = '1'; }
-    else if (status === 'synced') { indicator.innerHTML = 'Sincronizado'; setTimeout(function() { if (!isSaving) indicator.style.opacity = '0'; }, 3000); }
-    else if (status === 'error') { indicator.innerHTML = 'Erro de ligação'; indicator.style.opacity = '1'; }
+
+    if (status === 'saving') {
+        indicator.innerHTML = '<i class="ph-fill ph-circle-notch ph-spin" style="color:var(--accent);"></i> A guardar na nuvem...';
+        indicator.style.opacity = '1';
+    } else if (status === 'synced') {
+        indicator.innerHTML = '<i class="ph-fill ph-check-circle" style="color:var(--success);"></i> Nuvem Sincronizada';
+        setTimeout(() => { if (!isSaving && !isPendingSave) indicator.style.opacity = '0'; }, 3000);
+    } else if (status === 'error') {
+        indicator.innerHTML = '<i class="ph-fill ph-warning-circle" style="color:var(--danger);"></i> Erro de ligação';
+        indicator.style.opacity = '1';
+    }
 }
 
-// Lógica de Sincronização Local (Server.py / Flask)
-function initializeData() {
+async function initializeData() {
     updateSyncStatus('saving');
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET', '/api/state?t=' + Date.now(), true);
-    xhr.onload = function() {
-        if (xhr.status === 200) {
-            try {
-                var data = JSON.parse(xhr.responseText);
-                state = data;
-                state.currentView = 'dashboard';
+    try {
+        const snapshot = await stateRef.once('value');
+        const val = snapshot.val();
+        
+        if (!val) {
+            await saveState(); 
+        } else {
+            state = val;
+            state.currentView = 'dashboard'; // Forçar Painel como homepage ao iniciar
+            refreshCurrentView();
+            updateClientDatalist();
+            updateSyncStatus('synced');
+        }
+
+        stateRef.on('value', (snapshot) => {
+            const newVal = snapshot.val();
+            if (!newVal) return;
+            if (document.querySelector('.modal-overlay.open') || isSaving || isPendingSave) return;
+            if (JSON.stringify(newVal) !== JSON.stringify(state)) {
+                const activeView = state.currentView;
+                state = newVal;
+                state.currentView = activeView;
                 refreshCurrentView();
                 updateClientDatalist();
                 updateSyncStatus('synced');
-            } catch (e) { console.error("Erro ao processar dados", e); }
-        }
-    };
-    xhr.send();
-
-    // Polling opcional para manter sincronizado com outros dispositivos
-    setInterval(function() {
-        if (isSaving || document.querySelector('.modal-overlay.open')) return;
-        var pollXhr = new XMLHttpRequest();
-        pollXhr.open('GET', '/api/state?t=' + Date.now(), true);
-        pollXhr.onload = function() {
-            if (pollXhr.status === 200) {
-                var newData = JSON.parse(pollXhr.responseText);
-                if (JSON.stringify(newData) !== JSON.stringify(state)) {
-                    var currentView = state.currentView;
-                    state = newData;
-                    state.currentView = currentView;
-                    refreshCurrentView();
-                    updateClientDatalist();
-                }
             }
-        };
-        pollXhr.send();
-    }, 5000);
+        });
+    } catch (error) {
+        console.error("Firebase Init Error:", error);
+        updateSyncStatus('error');
+    }
 }
 
 function saveState() {
-    isSaving = true;
+    isPendingSave = true;
     updateSyncStatus('saving');
-    var xhr = new XMLHttpRequest();
-    xhr.open('POST', '/api/state', true);
-    xhr.setRequestHeader('Content-Type', 'application/json');
-    xhr.onload = function() {
-        isSaving = false;
+    return stateRef.set(state).then(() => {
+        isPendingSave = false;
         updateSyncStatus('synced');
-    };
-    xhr.onerror = function() {
-        isSaving = false;
+    }).catch(e => {
+        isPendingSave = false;
         updateSyncStatus('error');
-    };
-    xhr.send(JSON.stringify(state));
-}
-
-function getClientObs(name) {
-    if (!name) return '';
-    var client = state.clients.find(function(c) { return c.name === name; });
-    if (!client && name.indexOf(' - ') !== -1) {
-        client = state.clients.find(function(c) { return c.name === name.split(' - ')[0].trim(); });
-    }
-    return (client && client.observations) ? ' <span style="opacity:0.5; font-size:0.8rem;">(' + client.observations + ')</span>' : '';
-}
-
-function getWeekBirthdays() {
-    var today = new Date();
-    var start = new Date(today);
-    start.setDate(today.getDate() - today.getDay() + (today.getDay() === 0 ? -6 : 1));
-    var weekDates = [];
-    for (var i = 0; i < 7; i++) {
-        var d = new Date(start);
-        d.setDate(start.getDate() + i);
-        weekDates.push({ m: d.getMonth() + 1, d: d.getDate(), s: d.toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' }) });
-    }
-    return (state.clients || []).filter(function(c) {
-        if (!c.birthdate) return false;
-        var p = c.birthdate.split('-');
-        var bm = parseInt(p[1], 10), bd = parseInt(p[2], 10);
-        return weekDates.some(function(wd) { return wd.m === bm && wd.d === bd; });
-    }).map(function(c) {
-        var p = c.birthdate.split('-');
-        var bm = parseInt(p[1], 10), bd = parseInt(p[2], 10);
-        var wd = weekDates.find(function(w) { return w.m === bm && w.d === bd; });
-        return { name: c.name, dayDisplay: wd.s, phone: c.phone };
     });
 }
 
+// 4. DOM Elements
+let contentArea, pageTitle, navItems, modalOverlay;
+let btnNewAppt, btnNewService, btnNewClient, btnPrintReport, searchZone, clientSearchInput;
+let appointmentModal, clientModal, serviceModal, messageModal;
+
+function initDOMElements() {
+    contentArea = document.getElementById('content-area');
+    pageTitle = document.getElementById('page-title');
+    navItems = document.querySelectorAll('.nav-item');
+    modalOverlay = document.getElementById('modal-overlay');
+    btnNewAppt = document.getElementById('btn-new-appointment');
+    btnNewService = document.getElementById('btn-new-service');
+    btnNewClient = document.getElementById('btn-new-client');
+    btnPrintReport = document.getElementById('btn-print-report');
+    searchZone = document.getElementById('search-zone');
+    clientSearchInput = document.getElementById('client-search');
+    appointmentModal = document.getElementById('appointment-modal');
+    clientModal = document.getElementById('client-modal');
+    serviceModal = document.getElementById('service-modal');
+    messageModal = document.getElementById('message-modal');
+}
+
+// 5. Navigation
+function initNavigation() {
+    navItems.forEach(nav => {
+        nav.classList.toggle('active', nav.dataset.view === state.currentView);
+    });
+
+    navItems.forEach(item => {
+        item.addEventListener('click', (e) => {
+            navItems.forEach(nav => nav.classList.remove('active'));
+            e.currentTarget.classList.add('active');
+            state.currentView = e.currentTarget.dataset.view;
+            // Clear search when changing views
+            state.clientSearchQuery = "";
+            state.serviceSearchQuery = "";
+            if (clientSearchInput) clientSearchInput.value = "";
+            saveState();
+            refreshCurrentView();
+        });
+    });
+}
+
+function refreshCurrentView() {
+    const view = state.currentView || 'dashboard';
+    if (btnNewAppt) btnNewAppt.style.display = (view === 'calendar') ? 'inline-flex' : 'none';
+    if (btnNewService) btnNewService.style.display = (view === 'services') ? 'inline-flex' : 'none';
+    if (btnNewClient) btnNewClient.style.display = (view === 'clients') ? 'inline-flex' : 'none';
+    if (btnPrintReport) btnPrintReport.style.display = (view === 'reports') ? 'inline-flex' : 'none';
+    if (searchZone) {
+        searchZone.style.display = (view === 'clients' || view === 'services') ? 'block' : 'none';
+        if (clientSearchInput) {
+            clientSearchInput.placeholder = (view === 'services') ? "Pesquisar serviços..." : "Pesquisar Nome ou Contacto";
+        }
+    }
+
+    if (view === 'dashboard') renderDashboard();
+    else if (view === 'calendar') renderCalendar();
+    else if (view === 'clients') renderClients();
+    else if (view === 'services') renderServices();
+    else if (view === 'reports') renderReports();
+    else if (view === 'backup') renderBackup();
+}
+
+// Helper to get client observations
+function getClientObs(name) {
+    if (!name) return '';
+    // Robust lookup: try direct match, then strip observations if present
+    let client = state.clients.find(c => c.name === name);
+    if (!client && name.includes(' - ')) {
+        const cleanName = name.split(' - ')[0].trim();
+        client = state.clients.find(c => c.name === cleanName);
+    }
+    return (client && client.observations) ? `<span style="opacity: 0.5; font-weight: 400; font-size: 0.85rem; margin-left: 8px;">(${client.observations})</span>` : '';
+}
+
+// 6. Render Functions (Premium Look Restored)
 function renderDashboard() {
     pageTitle.textContent = "Painel";
-    var todayStr = new Date().toISOString().split('T')[0];
-    var tAppts = (state.appointments || []).filter(function(a) { return a.date === todayStr; });
-    var bdays = getWeekBirthdays();
+    const today = new Date();
+    const tomorrow = new Date();
+    tomorrow.setDate(today.getDate() + 1);
+    const todayStr = today.toISOString().split('T')[0];
+    const tomorrowStr = tomorrow.toISOString().split('T')[0];
+    const todayDisplay = today.toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' });
+    const tomorrowDisplay = tomorrow.toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' });
 
-    var bHTML = bdays.length > 0 ? bdays.map(function(b) {
-        return '<div style="font-weight:600; margin-bottom:2px;">' + b.name + ' <span style="font-weight:400; opacity:0.7;">(' + b.dayDisplay + ')</span></div>';
-    }).join('') : '0';
+    const todaysAppts = state.appointments.filter(a => a.date === todayStr);
+    const tomorrowAppts = state.appointments.filter(a => a.date === tomorrowStr);
 
-    contentArea.innerHTML = '<div class="dashboard-grid">' +
-        '<div class="card stat-card"><div class="stat-info"><span class="label">Total Hoje</span><span class="value">' + tAppts.length + '</span></div></div>' +
-        '<div class="card stat-card"><div class="stat-info"><span class="label">Clientes</span><span class="value">' + (state.clients ? state.clients.length : 0) + '</span></div></div>' +
-        '<div class="card stat-card" style="border-color:var(--rose); cursor:pointer;" onclick="window.goToBirthdays()">' +
-            '<div class="stat-info"><span class="label">Aniversários</span>' +
-            '<div style="max-height:80px; overflow-y:auto; font-size:0.8rem;">' + bHTML + '</div></div>' +
-        '</div>' +
-    '</div>' +
-    '<div class="section-header" style="margin-top:2rem;"><h3>Agenda de Hoje</h3></div>' +
-    '<div class="appointments-list">' + (tAppts.length > 0 ? tAppts.map(function(a) {
-        return '<div class="appointment-item"><b>' + a.time + '</b> - ' + a.clientName + getClientObs(a.clientName) + '</div>';
-    }).join('') : '<div style="padding:20px; color:#aaa; text-align:center;">Vazio hoje.</div>') + '</div>';
+    const getWeekBirthdays = () => {
+        const today = new Date();
+        const start = new Date(today);
+        start.setDate(today.getDate() - today.getDay() + (today.getDay() === 0 ? -6 : 1));
+        const weekDates = [];
+        for (let i = 0; i < 7; i++) {
+            const d = new Date(start);
+            d.setDate(start.getDate() + i);
+            weekDates.push({ m: d.getMonth() + 1, d: d.getDate(), s: d.toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' }) });
+        }
+        return state.clients.filter(c => {
+            if (!c.birthdate) return false;
+            const [by, bm, bd] = c.birthdate.split('-').map(Number);
+            return weekDates.some(wd => wd.m === bm && wd.d === bd);
+        }).map(c => {
+            const [by, bm, bd] = c.birthdate.split('-').map(Number);
+            return { ...c, dayDisplay: weekDates.find(w => w.m === bm && w.d === bd).s };
+        });
+    };
+    const formatAppt = (appt) => {
+        const types = Array.isArray(appt.type) ? appt.type : [appt.type];
+        return `
+            <div class="appointment-item">
+                <div class="appt-time">${appt.time}</div>
+                <div class="appt-details">
+                    <span class="client-name">${appt.clientName}${getClientObs(appt.clientName)}</span>
+                    <span class="appt-type"><i class="ph ph-sparkle"></i> ${types.join(', ')}</span>
+                </div>
+            </div>
+        `;
+    };
+    const bdays = getWeekBirthdays();
+
+    contentArea.innerHTML = `
+        <div class="dashboard-grid" style="grid-template-columns: repeat(3, 1fr);">
+            <div class="card stat-card">
+                <div class="stat-header"><span class="stat-icon"><i class="ph ph-trend-up"></i></span></div>
+                <div class="stat-info"><span class="label">Total de Marcações</span><span class="value">${state.appointments.length}</span></div>
+            </div>
+            <div class="card stat-card">
+                <div class="stat-header"><span class="stat-icon"><i class="ph ph-users"></i></span></div>
+                <div class="stat-info"><span class="label">Total de Clientes</span><span class="value">${state.clients.length}</span></div>
+            </div>
+            <div class="card stat-card" style="border-color: var(--rose);">
+                <div class="stat-header"><span class="stat-icon" style="background: var(--rose);"><i class="ph ph-cake"></i></span></div>
+                <div class="stat-info">
+                    <span class="label">Aniversários da Semana</span>
+                    <div style="max-height: 50px; overflow-y: auto; font-size: 0.85rem;">
+                        ${bdays.length > 0 ? bdays.map(b => `<div style="color: var(--text-primary); font-weight: 600;">${b.name} (${b.dayDisplay})</div>`).join('') : '<span class="value" style="font-size: 1.5rem;">0</span>'}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+            <div>
+                <div class="section-header"><h2>Agenda de Hoje</h2><span class="date-badge">${todayDisplay}</span></div>
+                <div class="appointments-list">${todaysAppts.length > 0 ? todaysAppts.map(formatAppt).join('') : '<div class="empty-state">Sem marcações para hoje.</div>'}</div>
+            </div>
+            <div>
+                <div class="section-header"><h2>Previsão para Amanhã</h2><span class="date-badge" style="background: var(--rose); color: white;">${tomorrowDisplay}</span></div>
+                <div class="appointments-list">${tomorrowAppts.length > 0 ? tomorrowAppts.map(formatAppt).join('') : '<div class="empty-state">Sem marcações para amanhã.</div>'}</div>
+            </div>
+        </div>
+    `;
 }
 
 function renderCalendar() {
     pageTitle.textContent = "Agenda";
-    var appts = [].concat(state.appointments || []).sort(function(a,b) { return (a.date + a.time).localeCompare(b.date + b.time); });
-    contentArea.innerHTML = '<div class="appointments-list">' + (appts.length > 0 ? appts.map(function(a) {
-        return '<div class="appointment-item"><b>' + a.date + ' ' + a.time + '</b> - ' + a.clientName + 
-               ' <div class="appt-actions"><button onclick="triggerEditAppt(\'' + a.id + '\')">Editar</button></div></div>';
-    }).join('') : 'Sem marcações.') + '</div>';
+    const today = new Date().toISOString().split('T')[0];
+    const allSorted = [...state.appointments].sort((a, b) => new Date(a.date + 'T' + a.time) - new Date(b.date + 'T' + b.time));
+    const activeAppts = allSorted.filter(a => a.date >= today);
+    const pastAppts = allSorted.filter(a => a.date < today);
+
+    const renderGrouped = (appts) => {
+        const grouped = {};
+        appts.forEach(appt => {
+            if (!grouped[appt.date]) grouped[appt.date] = [];
+            grouped[appt.date].push(appt);
+        });
+        let html = '';
+        for (const [date, dayAppts] of Object.entries(grouped)) {
+            const [y, m, d] = date.split('-');
+            const localDate = new Date(y, m - 1, d);
+            const dateStr = localDate.toLocaleDateString('pt-PT', { weekday: 'long', day: 'numeric', month: 'long' });
+            html += `<div style="margin-top: 2rem; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-primary); font-size: 0.9rem; text-transform: capitalize;">${dateStr}</div>`;
+            html += dayAppts.map(appt => `
+                <div class="appointment-item">
+                    <div class="appt-time">${appt.time}</div>
+                    <div class="appt-details">
+                        <span class="client-name">${appt.clientName}${getClientObs(appt.clientName)}</span>
+                        <span class="appt-type"><i class="ph ph-sparkle"></i> ${Array.isArray(appt.type) ? appt.type.join(', ') : appt.type}</span>
+                    </div>
+                    <div class="appt-actions">
+                        <button type="button" class="js-edit-btn" data-id="${appt.id}" title="Editar"><i class="ph ph-pencil-simple"></i></button>
+                        <button type="button" class="js-msg-btn" data-name="${appt.clientName}" data-time="${appt.time}" title="Enviar Mensagem"><i class="ph ph-paper-plane-tilt"></i></button>
+                        <button type="button" class="js-delete-btn btn-delete" data-type="appointment" data-id="${appt.id}" title="Eliminar"><i class="ph ph-trash"></i></button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        return html;
+    };
+
+    let fullHTML = `<div class="appointments-list">${activeAppts.length > 0 ? renderGrouped(activeAppts) : '<div class="empty-state">Nenhuma marcação futura encontrada.</div>'}</div>`;
+    if (pastAppts.length > 0) {
+        fullHTML += `
+            <div style="margin-top: 3rem; text-align: center; border-top: 1px dashed var(--border-color); padding-top: 2rem;">
+                <button type="button" class="btn btn-ghost" id="btn-toggle-archive" style="font-size: 0.85rem; color: var(--text-tertiary);">
+                    <i class="ph ph-archive-box"></i> ${state.showArchive ? 'Esconder Histórico' : 'Ver Histórico (' + pastAppts.length + ')'}
+                </button>
+            </div>
+            <div id="archive-container" class="appointments-list" style="display: ${state.showArchive ? 'block' : 'none'}; opacity: 0.7;">
+                ${renderGrouped(pastAppts)}
+            </div>
+        `;
+    }
+    contentArea.innerHTML = fullHTML;
+    const btnToggle = document.getElementById('btn-toggle-archive');
+    if (btnToggle) btnToggle.onclick = () => { state.showArchive = !state.showArchive; renderCalendar(); };
 }
 
 function renderClients() {
     pageTitle.textContent = "Clientes";
-    contentArea.innerHTML = '<div class="appointments-list">' + (state.clients || []).map(function(c) {
-        return '<div class="appointment-item"><b>' + c.name + '</b> - ' + (c.phone || 'S/T') + 
-               ' <div class="appt-actions"><button onclick="triggerEditClient(\'' + c.id + '\')">Editar</button></div></div>';
-    }).join('') + '</div>';
+    const normalize = (str) => (str || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    let filteredClients = state.clients;
+    if (state.clientSearchQuery) {
+        const query = normalize(state.clientSearchQuery);
+        filteredClients = state.clients.filter(c => normalize(c.name).includes(query) || (c.phone && normalize(c.phone).includes(query)));
+    }
+    if (filteredClients.length === 0) {
+        contentArea.innerHTML = '<div class="empty-state">Nenhum cliente encontrado.</div>';
+        return;
+    }
+    contentArea.innerHTML = `<div class="appointments-list">${filteredClients.map(client => `
+        <div class="appointment-item">
+            <div class="appt-details">
+                <span class="client-name">${client.name}</span>
+                <span class="appt-type">
+                    <span><i class="ph ph-phone"></i> ${client.phone || 'Sem contacto'}</span>
+                    ${client.birthdate ? `<span style="margin-left: 15px;"><i class="ph ph-cake"></i> ${client.birthdate.split('-').reverse().join('/')}</span>` : ''}
+                </span>
+                ${(client.observations) ? `<div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 6px; padding-top: 4px; border-top: 1px dashed var(--border-color);">${client.observations}</div>` : ''}
+            </div>
+            <div class="appt-actions">
+                <button type="button" class="js-edit-client-btn" data-id="${client.id}" title="Editar"><i class="ph ph-pencil-simple"></i></button>
+                <button type="button" class="js-msg-btn" data-name="${client.name}" data-time="" title="Mensagem"><i class="ph ph-paper-plane-tilt"></i></button>
+                <button type="button" class="js-delete-btn btn-delete" data-type="client" data-id="${client.id}" title="Eliminar"><i class="ph ph-trash"></i></button>
+            </div>
+        </div>
+    `).join('')}</div>`;
 }
 
 function renderServices() {
     pageTitle.textContent = "Serviços";
-    contentArea.innerHTML = '<div class="appointments-list">' + (state.services || []).map(function(s) {
-        return '<div class="appointment-item"><b>' + s.name + '</b> - €' + s.price + '</div>';
-    }).join('') + '</div>';
-}
-
-function renderBirthdays() {
-    pageTitle.textContent = "Aniversários da Semana";
-    var bdays = getWeekBirthdays();
-    if (bdays.length === 0) {
-        contentArea.innerHTML = '<div style="padding:40px; text-align:center;"><p>Nenhum esta semana.</p><br><button class="btn" onclick="state.currentView=\'dashboard\'; refreshCurrentView();">Voltar</button></div>';
+    let filtered = state.services;
+    const query = state.serviceSearchQuery ? state.serviceSearchQuery.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") : "";
+    if (query) filtered = state.services.filter(s => s.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(query));
+    if (filtered.length === 0) {
+        contentArea.innerHTML = '<div class="empty-state">Nenhum serviço encontrado.</div>';
         return;
     }
-    contentArea.innerHTML = '<div class="appointments-list">' + bdays.map(function(b) {
-        return '<div class="appointment-item"><b>' + b.name + '</b> (' + b.dayDisplay + ') - ' + (b.phone || 'S/T') + 
-               ' <div class="appt-actions"><button onclick="triggerMessage(\'' + b.name + '\', \'\')">Mensagem</button></div></div>';
-    }).join('') + '</div>';
+    contentArea.innerHTML = `<div class="appointments-list">${filtered.map(service => `
+        <div class="appointment-item">
+            <div class="service-icon-box"><i class="ph ph-scissors"></i></div>
+            <div class="appt-details">
+                <span class="client-name">${service.name}</span>
+                <span class="appt-type"><i class="ph ph-tag"></i> € ${parseFloat(service.price).toFixed(2)}</span>
+            </div>
+            <div class="appt-actions">
+                <button type="button" class="js-edit-service-btn" data-id="${service.id}" title="Editar"><i class="ph ph-pencil-simple"></i> Editar</button>
+                <button type="button" class="js-delete-btn btn-delete" data-type="service" data-id="${service.id}" title="Eliminar"><i class="ph ph-trash"></i></button>
+            </div>
+        </div>
+    `).join('')}</div>`;
 }
 
-window.goToBirthdays = function() { state.currentView = 'birthdays'; refreshCurrentView(); };
-
-function refreshCurrentView() {
-    var v = state.currentView;
-    if (v === 'dashboard') renderDashboard();
-    else if (v === 'calendar') renderCalendar();
-    else if (v === 'clients') renderClients();
-    else if (v === 'services') renderServices();
-    else if (v === 'reports') renderDashboard(); 
-    else if (v === 'birthdays') renderBirthdays();
-    else if (v === 'backup') renderBackup();
+function renderReports() {
+    pageTitle.textContent = "Relatórios";
+    if (!state.selectedReportMonth) state.selectedReportMonth = new Date().toISOString().substring(0, 7);
+    const selectedMonth = state.selectedReportMonth;
+    const monthAppts = state.appointments.filter(a => a.date.startsWith(selectedMonth));
+    const serviceSummary = {};
+    let totalRevenue = 0;
+    monthAppts.forEach(appt => {
+        const types = Array.isArray(appt.type) ? appt.type : [appt.type];
+        types.forEach(serviceName => {
+            const service = state.services.find(s => s.name === serviceName);
+            const price = service ? parseFloat(service.price) : 0;
+            if (!serviceSummary[serviceName]) serviceSummary[serviceName] = { count: 0, revenue: 0 };
+            serviceSummary[serviceName].count++;
+            serviceSummary[serviceName].revenue += price;
+            totalRevenue += price;
+        });
+    });
+    const displayMonth = new Date(selectedMonth + '-01').toLocaleDateString('pt-PT', { month: 'long', year: 'numeric' });
+    contentArea.innerHTML = `
+        <div class="report-controls no-print" style="margin-bottom: 2rem; display: flex; align-items: center; gap: 1rem; padding: 1rem; background: white; border-radius: 12px;">
+            <div style="font-weight: 600; font-size: 0.9rem;">Mês:</div>
+            <input type="month" id="report-month-picker" value="${selectedMonth}" style="padding: 8px; border-radius: 8px; border: 1px solid var(--border-color);">
+            <button class="btn btn-ghost" onclick="downloadBackup()" style="margin-left: auto;"><i class="ph ph-cloud-arrow-down"></i> Backup</button>
+        </div>
+        <div class="report-paper">
+            <h3>Relatório de ${displayMonth}</h3>
+            <div class="dashboard-grid" style="margin-top: 1rem;">
+                <div class="card"><span class="label">Faturamento</span><span class="value">€ ${totalRevenue.toFixed(2)}</span></div>
+                <div class="card"><span class="label">Total</span><span class="value">${monthAppts.length}</span></div>
+            </div>
+        </div>
+    `;
+    const picker = document.getElementById('report-month-picker');
+    if (picker) picker.onchange = (e) => { state.selectedReportMonth = e.target.value; saveState(); renderReports(); };
 }
 
 function renderBackup() {
-    pageTitle.textContent = "Backup e Restauro";
-    contentArea.innerHTML = '<div style="padding:20px; background:white; border-radius:12px; border:1px solid #eee;">' +
-        '<h3>Cópia de Segurança</h3>' +
-        '<p style="color:#666; margin-bottom:20px;">Guarde os seus dados regularmente para evitar perdas.</p>' +
-        '<button class="btn btn-primary" onclick="window.downloadBackup()" style="width:100%; margin-bottom:10px;">Descarregar Backup (.json)</button>' +
-        '<hr style="margin:20px 0; border:0; border-top:1px solid #eee;">' +
-        '<h3>Restaurar Dados</h3>' +
-        '<p style="color:#666; margin-bottom:10px;">Selecione um ficheiro de backup para substituir os dados atuais.</p>' +
-        '<input type="file" id="import-file" style="display:none;" onchange="window.doImport(this)">' +
-        '<button class="btn" onclick="document.getElementById(\'import-file\').click()" style="width:100%; border:1px solid #ccc;">Selecionar Ficheiro e Restaurar</button>' +
-        '</div>';
+    pageTitle.textContent = "Backup";
+    contentArea.innerHTML = `
+        <div class="card" style="max-width: 500px; margin: 2rem auto; text-align: center; padding: 2rem;">
+            <i class="ph ph-shield-check" style="font-size: 3rem; color: var(--accent); margin-bottom: 1rem;"></i>
+            <h2>Segurança de Dados</h2>
+            <div style="display: grid; gap: 1rem; margin-top: 1.5rem;">
+                <button class="btn btn-primary" onclick="downloadBackup()">Baixar Cópia</button>
+                <button class="btn btn-ghost" onclick="uploadBackup()">Restaurar Cópia</button>
+            </div>
+        </div>
+    `;
 }
 
-window.downloadBackup = function() {
-    var dataStr = JSON.stringify(state, null, 2);
-    var blob = new Blob([dataStr], { type: 'application/json' });
-    var url = URL.createObjectURL(blob);
-    var a = document.createElement('a');
-    a.href = url;
-    a.download = 'backup_nelia_' + new Date().toISOString().split('T')[0] + '.json';
-    a.click();
+// 7. Actions & Modals
+window.triggerDelete = async function(type, id) {
+    if(!(await brandedConfirm('Deseja eliminar este item?'))) return;
+    if(type === 'appointment') state.appointments = state.appointments.filter(a => a.id != id);
+    else if(type === 'client') state.clients = state.clients.filter(c => c.id != id);
+    else if(type === 'service') state.services = state.services.filter(s => s.id != id);
+    saveState(); refreshCurrentView();
 };
 
-window.doImport = function(input) {
-    if (!input.files || !input.files[0]) return;
-    var reader = new FileReader();
-    reader.onload = function(e) {
-        try {
-            var importedData = JSON.parse(e.target.result);
-            if (confirm('Tem a certeza que deseja substituir todos os dados atuais por este backup?')) {
-                state = importedData;
-                saveState();
-                alert('Dados restaurados com sucesso!');
-                state.currentView = 'dashboard';
-                refreshCurrentView();
-            }
-        } catch (err) { alert('Erro ao ler o ficheiro. Verifique se é um backup válido.'); }
-    };
-    reader.readAsText(input.files[0]);
-};
+function openModal(modalEl) {
+    document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
+    modalEl.style.display = 'block';
+    modalOverlay.classList.add('open');
+    modalOverlay.style.display = 'flex';
+}
+window.closeModals = () => { modalOverlay.classList.remove('open'); setTimeout(() => { modalOverlay.style.display = 'none'; }, 200); };
 
-function openModal(el) { el.style.display = 'block'; modalOverlay.style.display = 'flex'; }
-window.closeModals = function() {
-    document.querySelectorAll('.modal').forEach(function(m) { m.style.display = 'none'; });
-    modalOverlay.style.display = 'none';
-};
-
-function updateClientDatalist() {
-    var dl = document.getElementById('client-list');
-    if (dl && state.clients) dl.innerHTML = state.clients.map(function(c) { return '<option value="' + c.name + '">'; }).join('');
+// 8. Event Delegation (Restore edit/msg logic)
+function setupEventDelegation() {
+    contentArea.addEventListener('click', (e) => {
+        const editBtn = e.target.closest('.js-edit-btn');
+        if (editBtn) triggerEditAppt(editBtn.dataset.id);
+        const editClientBtn = e.target.closest('.js-edit-client-btn');
+        if (editClientBtn) triggerEditClient(editClientBtn.dataset.id);
+        const editServiceBtn = e.target.closest('.js-edit-service-btn');
+        if (editServiceBtn) triggerEditService(editServiceBtn.dataset.id);
+        const msgBtn = e.target.closest('.js-msg-btn');
+        if (msgBtn) triggerMessage(msgBtn.dataset.name, msgBtn.dataset.time);
+        const delBtn = e.target.closest('.js-delete-btn');
+        if (delBtn) triggerDelete(delBtn.dataset.type, delBtn.dataset.id);
+    });
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-    contentArea = document.getElementById('content-area');
-    pageTitle = document.getElementById('page-title');
-    navItems = document.querySelectorAll('.nav-item');
-    appointmentModal = document.getElementById('appointment-modal');
-    serviceModal = document.getElementById('service-modal');
-    clientModal = document.getElementById('client-modal');
-    messageModal = document.getElementById('message-modal');
-    modalOverlay = document.getElementById('modal-overlay');
+function triggerEditAppt(id) {
+    const appt = state.appointments.find(a => a.id == id);
+    if (!appt) return;
+    document.getElementById('appt-id').value = appt.id;
+    document.getElementById('appt-name').value = appt.clientName;
+    document.getElementById('appt-date').value = appt.date;
+    document.getElementById('appt-time').value = appt.time;
+    selectedServices = Array.isArray(appt.type) ? [...appt.type] : [appt.type];
+    renderSelectedServicesList();
+    document.getElementById('modal-title').textContent = "Editar Marcação";
+    updateServiceOptions();
+    updateClientDatalist();
+    openModal(appointmentModal);
+}
 
-    for (var i = 0; i < navItems.length; i++) {
-        navItems[i].onclick = function() {
-            state.currentView = this.dataset.view;
-            refreshCurrentView();
-        };
+function triggerEditClient(id) {
+    const client = state.clients.find(c => c.id == id);
+    if (!client) return;
+    document.getElementById('client-id').value = client.id;
+    document.getElementById('client-name').value = client.name;
+    document.getElementById('client-phone').value = client.phone || '';
+    document.getElementById('client-birthdate').value = client.birthdate || '';
+    document.getElementById('client-observations').value = client.observations || '';
+    openModal(clientModal);
+}
+
+function triggerEditService(id) {
+    const service = state.services.find(s => s.id == id);
+    if (!service) return;
+    document.getElementById('service-id').value = service.id;
+    document.getElementById('service-name').value = service.name;
+    document.getElementById('service-price').value = service.price;
+    document.getElementById('service-modal-title').textContent = "Editar Serviço";
+    openModal(serviceModal);
+}
+
+function triggerMessage(name, time) {
+    // Robust lookup: try direct match, then strip observations if present (from old data)
+    let client = state.clients.find(c => c.name === name);
+    if (!client && name.includes(' - ')) {
+        const cleanName = name.split(' - ')[0].trim();
+        client = state.clients.find(c => c.name === cleanName);
     }
 
-    document.querySelectorAll('.close-modal, .close-modal-btn').forEach(function(b) { b.onclick = window.closeModals; });
-    modalOverlay.onclick = function(e) { if (e.target === modalOverlay) window.closeModals(); };
+    document.getElementById('msg-recipient').value = client ? client.name : name;
+    document.getElementById('msg-phone-hidden').value = client ? client.phone : '';
+    const hourLabel = time || '[Hora]';
+    const firstName = (client ? client.name : name).split(' ')[0];
+    document.getElementById('msg-content').value = `Olá, ${firstName}! ✨\nAqui é a Nélia a relembrar que tem marcação amanhã às ${hourLabel}.\nSe não conseguir comparecer, agradeço que me avise.\nMuito obrigada\nAté breve! 😊`;
+    openModal(messageModal);
+}
+
+function updateServiceOptions() {
+    const inputType = document.getElementById('appt-type');
+    if (!inputType) return;
+    inputType.innerHTML = '<option value="" disabled selected>Adicionar serviço...</option>' + state.services.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
+}
+
+function updateClientDatalist() {
+    const dataList = document.getElementById('client-list');
+    if (!dataList) return;
+    dataList.innerHTML = state.clients.map(c => {
+        // Keeping the value as the name only, but showing observations in the dropdown text
+        return `<option value="${c.name}">${c.name}${c.observations ? ' - ' + c.observations : ''}</option>`;
+    }).join('');
+}
+
+function renderSelectedServicesList() {
+    const container = document.getElementById('selected-services-container');
+    if (container) container.innerHTML = selectedServices.map((s, i) => `<div style="background:var(--accent-light); padding:4px 12px; border-radius:20px; font-size:0.85rem; display:flex; align-items:center; gap:8px;">${s} <i class="ph ph-x" onclick="removeServiceFromAppt(${i})" style="cursor:pointer"></i></div>`).join('');
+}
+window.removeServiceFromAppt = (i) => { selectedServices.splice(i, 1); renderSelectedServicesList(); };
+
+function showNotification(msg) {
+    const container = document.getElementById('notification-container');
+    if (!container) return;
+    const toast = document.createElement('div'); toast.className = 'toast';
+    toast.innerHTML = `<i class="ph ph-check-circle"></i><span>${msg}</span>`;
+    container.appendChild(toast);
+    setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
+}
+
+async function brandedConfirm(message) {
+    return new Promise((resolve) => {
+        const modal = document.getElementById('confirm-modal');
+        const overlay = document.getElementById('modal-overlay');
+        const msgEl = document.getElementById('confirm-msg');
+        const btnYes = document.getElementById('confirm-yes');
+        const btnNo = document.getElementById('confirm-no');
+
+        if (!modal || !overlay) {
+            resolve(window.confirm(message));
+            return;
+        }
+
+        msgEl.textContent = message;
+        
+        const cleanup = (result) => {
+            btnYes.onclick = null;
+            btnNo.onclick = null;
+            modal.style.display = 'none';
+            overlay.classList.remove('open');
+            setTimeout(() => { overlay.style.display = 'none'; }, 200);
+            resolve(result);
+        };
+
+        btnYes.onclick = () => cleanup(true);
+        btnNo.onclick = () => cleanup(false);
+
+        // Abrir
+        document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
+        modal.style.display = 'block';
+        modalOverlay.classList.add('open');
+        modalOverlay.style.display = 'flex';
+    });
+}
+
+// 9. Startup & Form Listeners
+document.addEventListener('DOMContentLoaded', () => {
+    initDOMElements();
+    initNavigation();
+    setupEventDelegation();
+
+    document.querySelectorAll('.close-modal, .close-modal-btn, .close-client-btn, .close-service-btn, .close-msg-btn').forEach(b => b.onclick = closeModals);
+    modalOverlay.onclick = (e) => { if (e.target === modalOverlay) closeModals(); };
+
+    document.getElementById('btn-new-appointment').onclick = () => {
+        document.getElementById('appointment-form').reset();
+        document.getElementById('appt-id').value = '';
+        selectedServices = [];
+        renderSelectedServicesList();
+        document.getElementById('modal-title').textContent = "Nova Marcação";
+        document.getElementById('appt-date').value = new Date().toISOString().split('T')[0];
+        updateServiceOptions();
+        updateClientDatalist();
+        openModal(appointmentModal);
+    };
+
+    document.getElementById('btn-new-service').onclick = () => {
+        document.getElementById('service-form').reset();
+        document.getElementById('service-id').value = '';
+        document.getElementById('service-modal-title').textContent = "Novo Serviço";
+        openModal(serviceModal);
+    };
+
+    document.getElementById('btn-new-client').onclick = () => {
+        document.getElementById('client-form').reset();
+        document.getElementById('client-id').value = '';
+        openModal(clientModal);
+    };
+
+    document.getElementById('appointment-form').onsubmit = async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('appt-id').value;
+        
+        let clientName = document.getElementById('appt-name').value;
+        // Clean name if user selected it with observation suffix from old datalist version
+        if (clientName.includes(' - ')) {
+            clientName = clientName.split(' - ')[0].trim();
+        }
+
+        const newAppt = {
+            id: id || Date.now(),
+            clientName: clientName,
+            date: document.getElementById('appt-date').value,
+            time: document.getElementById('appt-time').value,
+            type: selectedServices,
+            price: selectedServices.reduce((acc, sName) => {
+                const s = state.services.find(ser => ser.name === sName);
+                return acc + (s ? parseFloat(s.price) : 0);
+            }, 0)
+        };
+        if(id) {
+            const idx = state.appointments.findIndex(a => a.id == id);
+            if(idx !== -1) state.appointments[idx] = newAppt;
+        } else {
+            state.appointments.push(newAppt);
+        }
+        await saveState(); closeModals(); refreshCurrentView(); showNotification('Guardado!');
+    };
+
+    document.getElementById('client-form').onsubmit = async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('client-id').value;
+        const cData = {
+            id: id || Date.now(),
+            name: document.getElementById('client-name').value,
+            phone: document.getElementById('client-phone').value,
+            birthdate: document.getElementById('client-birthdate').value,
+            observations: document.getElementById('client-observations').value
+        };
+        if(id) {
+            const idx = state.clients.findIndex(c => c.id == id);
+            if(idx !== -1) state.clients[idx] = cData;
+        } else {
+            state.clients.push(cData);
+        }
+        await saveState(); closeModals(); refreshCurrentView(); updateClientDatalist(); showNotification('Cliente Guardado!');
+    };
+
+    document.getElementById('service-form').onsubmit = async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('service-id').value;
+        const sData = {
+            id: id || Date.now(),
+            name: document.getElementById('service-name').value,
+            price: document.getElementById('service-price').value
+        };
+        if(id) {
+            const idx = state.services.findIndex(s => s.id == id);
+            if(idx !== -1) state.services[idx] = sData;
+        } else {
+            state.services.push(sData);
+        }
+        await saveState(); closeModals(); refreshCurrentView(); showNotification('Serviço Guardado!');
+    };
+
+    document.getElementById('btn-add-service-to-appt').onclick = () => {
+        const val = document.getElementById('appt-type').value;
+        if(val && !selectedServices.includes(val)) { selectedServices.push(val); renderSelectedServicesList(); }
+    };
+
+    document.getElementById('btn-send-whatsapp').onclick = () => {
+        const phone = document.getElementById('msg-phone-hidden').value.replace(/\D/g, '');
+        if(phone) window.open(`https://wa.me/${phone}?text=${encodeURIComponent(document.getElementById('msg-content').value)}`, '_blank');
+        else showNotification('Sem telefone');
+    };
+
+    document.getElementById('btn-send-sms').onclick = () => {
+        const phone = document.getElementById('msg-phone-hidden').value.replace(/\D/g, '');
+        if(phone) window.location.href = `sms:${phone}?&body=${encodeURIComponent(document.getElementById('msg-content').value)}`;
+        else showNotification('Sem telefone');
+    };
+
+    if (clientSearchInput) {
+        clientSearchInput.addEventListener('input', (e) => {
+            const query = e.target.value;
+            if (state.currentView === 'clients') {
+                state.clientSearchQuery = query;
+                renderClients();
+            } else if (state.currentView === 'services') {
+                state.serviceSearchQuery = query;
+                renderServices();
+            }
+        });
+    }
 
     initializeData();
 });
+
+window.downloadBackup = () => {
+    const blob = new Blob([JSON.stringify(state, null, 2)], {type: 'application/json'});
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'backup_agenda.json'; a.click();
+};
+
+window.uploadBackup = () => {
+    const input = document.createElement('input'); input.type = 'file'; input.accept = '.json';
+    input.onchange = async (e) => {
+        const file = e.target.files[0]; if(!file) return;
+        const reader = new FileReader();
+        reader.onload = async (ev) => {
+            const data = JSON.parse(ev.target.result);
+            if(data.clients && data.appointments) { state = data; await saveState(); refreshCurrentView(); showNotification('Restaurado!'); }
+        };
+        reader.readAsText(file);
+    };
+    input.click();
+};

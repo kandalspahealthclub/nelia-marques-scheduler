@@ -227,7 +227,7 @@ h1 {
 /* --- DASHBOARD GRID --- */
 .dashboard-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    grid-template-columns: repeat(2, 1fr);
     gap: 1.5rem;
     margin-bottom: 3rem;
 }
@@ -720,20 +720,6 @@ h1 {
     .dashboard-grid {
         grid-template-columns: 1fr;
         gap: 1rem;
-    }
-
-    .stat-card {
-        padding: 1.25rem !important;
-    }
-
-    .stat-icon {
-        width: 40px !important;
-        height: 40px !important;
-        font-size: 1.2rem !important;
-    }
-
-    .stat-info .value {
-        font-size: 1.25rem !important;
     }
 
     .appointment-item {

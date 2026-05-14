@@ -167,9 +167,9 @@
 
         .dashboard-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 0.75rem;
-            margin-bottom: 1.5rem;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
         }
 
         .card {
@@ -184,19 +184,19 @@
         }
 
         .stat-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
             background: var(--accent-light);
             color: var(--accent);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.25rem;
+            font-size: 1.5rem;
         }
 
         .stat-info .value {
-            font-size: 1.25rem;
+            font-size: 1.5rem;
             font-weight: 700;
         }
 
@@ -711,7 +711,7 @@
         var state = JSON.parse(JSON.stringify(defaultState));
         var selectedServicesMobile = []; // Temporary storage for services in the current modal
         // Cache Buster v8.1
-        var APP_VERSION = '8.4';
+        var APP_VERSION = '8.1';
         if (localStorage.getItem('app_ver') !== APP_VERSION) {
             localStorage.setItem('app_ver', APP_VERSION);
             // Optional: force reload logic or just let natural cache expire
@@ -808,31 +808,6 @@
             return (client && client.observations) ? '<span style="opacity: 0.5; font-weight: 400; font-size: 0.8rem; margin-left: 6px;">(' + client.observations + ')</span>' : '';
         }
 
-        function getWeekBirthdays() {
-            var today = new Date();
-            var start = new Date(today);
-            start.setDate(today.getDate() - today.getDay() + (today.getDay() === 0 ? -6 : 1));
-            var weekDates = [];
-            for (var i = 0; i < 7; i++) {
-                var d = new Date(start);
-                d.setDate(start.getDate() + i);
-                weekDates.push({ m: d.getMonth() + 1, d: d.getDate(), s: d.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' }) });
-            }
-            return state.clients.filter(function(c) {
-                if (!c.birthdate) return false;
-                var parts = c.birthdate.split('-');
-                var bm = parseInt(parts[1], 10);
-                var bd = parseInt(parts[2], 10);
-                return weekDates.some(function(wd) { return wd.m === bm && wd.d === bd; });
-            }).map(function(c) {
-                var parts = c.birthdate.split('-');
-                var bm = parseInt(parts[1], 10);
-                var bd = parseInt(parts[2], 10);
-                var wd = weekDates.find(function(w) { return w.m === bm && w.d === bd; });
-                return { name: c.name, dayDisplay: wd.s, phone: c.phone };
-            });
-        }
-
         var contentArea = document.getElementById('content-area');
         var pageTitle = document.getElementById('page-title');
         var navItems = document.querySelectorAll('.nav-item');
@@ -886,13 +861,7 @@
             else if (view === 'clients') renderClients();
             else if (view === 'services') renderServices();
             else if (view === 'reports') renderReports();
-            else if (view === 'birthdays') renderBirthdays();
         }
-
-        window.goToBirthdays = function() {
-            state.currentView = 'birthdays';
-            if (typeof refreshView === 'function') refreshView();
-        };
 
         function brandedConfirm(message, callback) {
             callback(confirm(message));
@@ -929,6 +898,30 @@
             var appts = state.appointments.filter(function (a) { return a.date === todayStr; });
             var tomorrowAppts = state.appointments.filter(function (a) { return a.date === tomorrowStr; });
 
+            function getWeekBirthdays() {
+                var today = new Date();
+                var start = new Date(today);
+                start.setDate(today.getDate() - today.getDay() + (today.getDay() === 0 ? -6 : 1));
+                var weekDates = [];
+                for (var i = 0; i < 7; i++) {
+                    var d = new Date(start);
+                    d.setDate(start.getDate() + i);
+                    weekDates.push({ m: d.getMonth() + 1, d: d.getDate(), s: d.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' }) });
+                }
+                return state.clients.filter(function(c) {
+                    if (!c.birthdate) return false;
+                    var parts = c.birthdate.split('-');
+                    var bm = parseInt(parts[1], 10);
+                    var bd = parseInt(parts[2], 10);
+                    return weekDates.some(function(wd) { return wd.m === bm && wd.d === bd; });
+                }).map(function(c) {
+                    var parts = c.birthdate.split('-');
+                    var bm = parseInt(parts[1], 10);
+                    var bd = parseInt(parts[2], 10);
+                    var wd = weekDates.find(function(w) { return w.m === bm && w.d === bd; });
+                    return { name: c.name, dayDisplay: wd.s };
+                });
+            }
             var bdays = getWeekBirthdays();
 
             var logoSrc = "logo.png?t=" + new Date().getTime();
@@ -939,7 +932,7 @@
                 '<div class="dashboard-grid">' +
                 '<div class="card"><div class="stat-icon"><i class="ph ph-trend-up"></i></div><div class="stat-info"><div class="label">Hoje</div><div class="value">' + appts.length + '</div></div></div>' +
                 '<div class="card"><div class="stat-icon"><i class="ph ph-users"></i></div><div class="stat-info"><div class="label">Total</div><div class="value">' + state.clients.length + '</div></div></div>' +
-                '<div class="card" style="border-color:var(--rose); cursor:pointer;" onclick="goToBirthdays()"><div class="stat-icon" style="background:var(--rose);"><i class="ph ph-cake"></i></div><div class="stat-info"><div class="label">Aniversários</div><div style="font-size:0.75rem; font-weight:600; color:var(--text-primary); margin-top:4px; max-height:60px; overflow-y:auto;">' + (bdays.length > 0 ? bdays.map(function(b){ return b.name + ' <span style="font-weight:400; opacity:0.7;">(' + b.dayDisplay + ')</span>'; }).join('<br>') : '0') + '</div></div></div>' +
+                '<div class="card" style="border-color:var(--rose);"><div class="stat-icon" style="background:var(--rose);"><i class="ph ph-cake"></i></div><div class="stat-info"><div class="label">Aniversários</div><div style="font-size:0.8rem; font-weight:600; color:var(--text-primary); margin-top:4px;">' + (bdays.length > 0 ? bdays.map(function(b){ return b.name + ' (' + b.dayDisplay + ')'; }).join('<br>') : '0') + '</div></div></div>' +
                 '</div>';
 
             html += '<div class="section-header" style="margin-top:1.5rem;"><h3>Agenda de Hoje</h3><span class="date-badge">' + todayDisplay + '</span></div>' +
@@ -1126,27 +1119,6 @@
         function renderApptItem(a) {
             var types = Array.isArray(a.type) ? a.type.join(', ') : a.type;
             return '<div class="appointment-item"><div class="appt-time">' + a.time + '</div><div class="appt-details" style="flex:1;"><span class="client-name">' + a.clientName + getClientObs(a.clientName) + '</span><span class="appt-type"><i class="ph ph-calendar"></i> ' + a.date + ' • ' + types + '</span></div><div class="appt-actions"><button onclick="openMsgModal(\'' + (a.clientName || '') + '\',\'' + a.time + '\')"><i class="ph ph-paper-plane-tilt"></i></button><button onclick="del(\'appointment\',' + a.id + ')" style="color:var(--rose);"><i class="ph ph-trash"></i></button></div></div>';
-        }
-
-        function renderBirthdays() {
-            pageTitle.textContent = "Aniversários da Semana";
-            var bdays = getWeekBirthdays();
-
-            var html = '<div style="margin-bottom: 1.5rem;">' +
-                '<button class="btn btn-ghost" onclick="state.currentView=\'dashboard\'; refreshView();" style="background:#f1f5f9; padding:0.6rem 1rem; border-radius:8px; border:none; display:flex; align-items:center; gap:0.5rem; font-weight:600; color:var(--text-secondary);">' +
-                '<i class="ph ph-arrow-left"></i> Voltar ao Painel</button></div>';
-
-            if (bdays.length === 0) {
-                html += '<div style="text-align:center; padding:3rem 1rem; color:#aaa;">' +
-                    '<i class="ph ph-balloon" style="font-size:3rem; color:var(--rose); margin-bottom:1rem; display:block;"></i>' +
-                    'Nenhum aniversário esta semana.</div>';
-            } else {
-                html += '<div class="appointments-list">' +
-                    bdays.map(function (c) {
-                        return '<div class="appointment-item" style="border-left: 4px solid var(--rose);"><div class="appt-details" style="flex:1;"><span class="client-name">' + c.name + '</span><span class="appt-type"><i class="ph ph-cake"></i> ' + c.dayDisplay + ' • <i class="ph ph-phone"></i> ' + (c.phone || 'Sem tel') + '</span></div><div class="appt-actions"><button onclick="openMsgModal(\'' + (c.name || '') + '\',\'\')"><i class="ph ph-paper-plane-tilt"></i></button></div></div>';
-                    }).join('') + '</div>';
-            }
-            contentArea.innerHTML = html;
         }
 
         // ACTIONS
