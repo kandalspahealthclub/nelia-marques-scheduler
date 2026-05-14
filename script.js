@@ -1,4 +1,3 @@
-
 // 1. Estado e Configuração
 var defaultState = {
     appointments: [],
