@@ -186,9 +186,52 @@ function refreshCurrentView() {
     else if (v === 'calendar') renderCalendar();
     else if (v === 'clients') renderClients();
     else if (v === 'services') renderServices();
-    else if (v === 'reports') renderDashboard(); // Placeholder
+    else if (v === 'reports') renderDashboard(); 
     else if (v === 'birthdays') renderBirthdays();
+    else if (v === 'backup') renderBackup();
 }
+
+function renderBackup() {
+    pageTitle.textContent = "Backup e Restauro";
+    contentArea.innerHTML = '<div style="padding:20px; background:white; border-radius:12px; border:1px solid #eee;">' +
+        '<h3>Cópia de Segurança</h3>' +
+        '<p style="color:#666; margin-bottom:20px;">Guarde os seus dados regularmente para evitar perdas.</p>' +
+        '<button class="btn btn-primary" onclick="window.downloadBackup()" style="width:100%; margin-bottom:10px;">Descarregar Backup (.json)</button>' +
+        '<hr style="margin:20px 0; border:0; border-top:1px solid #eee;">' +
+        '<h3>Restaurar Dados</h3>' +
+        '<p style="color:#666; margin-bottom:10px;">Selecione um ficheiro de backup para substituir os dados atuais.</p>' +
+        '<input type="file" id="import-file" style="display:none;" onchange="window.doImport(this)">' +
+        '<button class="btn" onclick="document.getElementById(\'import-file\').click()" style="width:100%; border:1px solid #ccc;">Selecionar Ficheiro e Restaurar</button>' +
+        '</div>';
+}
+
+window.downloadBackup = function() {
+    var dataStr = JSON.stringify(state, null, 2);
+    var blob = new Blob([dataStr], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'backup_nelia_' + new Date().toISOString().split('T')[0] + '.json';
+    a.click();
+};
+
+window.doImport = function(input) {
+    if (!input.files || !input.files[0]) return;
+    var reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            var importedData = JSON.parse(e.target.result);
+            if (confirm('Tem a certeza que deseja substituir todos os dados atuais por este backup?')) {
+                state = importedData;
+                saveState();
+                alert('Dados restaurados com sucesso!');
+                state.currentView = 'dashboard';
+                refreshCurrentView();
+            }
+        } catch (err) { alert('Erro ao ler o ficheiro. Verifique se é um backup válido.'); }
+    };
+    reader.readAsText(input.files[0]);
+};
 
 function openModal(el) { el.style.display = 'block'; modalOverlay.style.display = 'flex'; }
 window.closeModals = function() {
