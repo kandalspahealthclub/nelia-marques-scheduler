@@ -800,6 +800,10 @@
         function getClientObs(name) {
             if (!name) return '';
             var client = state.clients.find(function(c) { return c.name === name; });
+            if (!client && name.indexOf(' - ') !== -1) {
+                var cleanName = name.split(' - ')[0].trim();
+                client = state.clients.find(function(c) { return c.name === cleanName; });
+            }
             return (client && client.observations) ? '<span style="opacity: 0.5; font-weight: 400; font-size: 0.8rem; margin-left: 6px;">(' + client.observations + ')</span>' : '';
         }
 

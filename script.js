@@ -174,6 +174,18 @@ function refreshCurrentView() {
     else if (view === 'backup') renderBackup();
 }
 
+// Helper to get client observations
+function getClientObs(name) {
+    if (!name) return '';
+    // Robust lookup: try direct match, then strip observations if present
+    let client = state.clients.find(c => c.name === name);
+    if (!client && name.includes(' - ')) {
+        const cleanName = name.split(' - ')[0].trim();
+        client = state.clients.find(c => c.name === cleanName);
+    }
+    return (client && client.observations) ? `<span style="opacity: 0.5; font-weight: 400; font-size: 0.85rem; margin-left: 8px;">(${client.observations})</span>` : '';
+}
+
 // 6. Render Functions (Premium Look Restored)
 function renderDashboard() {
     pageTitle.textContent = "Painel";
@@ -194,7 +206,7 @@ function renderDashboard() {
             <div class="appointment-item">
                 <div class="appt-time">${appt.time}</div>
                 <div class="appt-details">
-                    <span class="client-name">${appt.clientName}</span>
+                    <span class="client-name">${appt.clientName}${getClientObs(appt.clientName)}</span>
                     <span class="appt-type"><i class="ph ph-sparkle"></i> ${types.join(', ')}</span>
                 </div>
             </div>
@@ -248,7 +260,7 @@ function renderCalendar() {
                 <div class="appointment-item">
                     <div class="appt-time">${appt.time}</div>
                     <div class="appt-details">
-                        <span class="client-name">${appt.clientName}</span>
+                        <span class="client-name">${appt.clientName}${getClientObs(appt.clientName)}</span>
                         <span class="appt-type"><i class="ph ph-sparkle"></i> ${Array.isArray(appt.type) ? appt.type.join(', ') : appt.type}</span>
                     </div>
                     <div class="appt-actions">
