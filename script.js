@@ -172,6 +172,7 @@ function refreshCurrentView() {
     else if (view === 'clients') renderClients();
     else if (view === 'services') renderServices();
     else if (view === 'reports') renderReports();
+    else if (view === 'birthdays') renderBirthdays();
     else if (view === 'backup') renderBackup();
 }
 
@@ -414,6 +415,92 @@ function renderReports() {
     if (picker) picker.onchange = (e) => { state.selectedReportMonth = e.target.value; saveState(); renderReports(); };
 }
 
+function renderBirthdays() {
+    pageTitle.textContent = "Aniversários";
+    
+    const clientsWithBday = state.clients.filter(c => c.birthdate);
+    
+    const getMonthDay = (dateStr) => {
+        const [y, m, d] = dateStr.split('-');
+        return parseInt(m) * 100 + parseInt(d);
+    };
+    
+    clientsWithBday.sort((a, b) => getMonthDay(a.birthdate) - getMonthDay(b.birthdate));
+
+    const getWeekBirthdays = () => {
+        const today = new Date();
+        const start = new Date(today);
+        start.setDate(today.getDate() - today.getDay() + (today.getDay() === 0 ? -6 : 1));
+        const weekDates = [];
+        for (let i = 0; i < 7; i++) {
+            const d = new Date(start);
+            d.setDate(start.getDate() + i);
+            weekDates.push({ m: d.getMonth() + 1, d: d.getDate(), s: d.toLocaleDateString('pt-PT', { day: 'numeric', month: 'long' }) });
+        }
+        return state.clients.filter(c => {
+            if (!c.birthdate) return false;
+            const [by, bm, bd] = c.birthdate.split('-').map(Number);
+            return weekDates.some(wd => wd.m === bm && wd.d === bd);
+        }).map(c => {
+            const [by, bm, bd] = c.birthdate.split('-').map(Number);
+            return { ...c, dayDisplay: weekDates.find(w => w.m === bm && w.d === bd).s };
+        });
+    };
+
+    const bdaysThisWeek = getWeekBirthdays();
+
+    let html = `
+        <div class="dashboard-grid" style="grid-template-columns: 1fr; margin-bottom: 2rem;">
+            <div class="card stat-card" style="border-color: var(--rose); display: block; padding: 1.5rem;">
+                <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                    <span class="stat-icon" style="background: var(--rose);"><i class="ph ph-cake"></i></span>
+                    <h3 style="margin: 0;">Aniversários da Semana</h3>
+                </div>
+                <div>
+                    ${bdaysThisWeek.length > 0 ? 
+                        bdaysThisWeek.map(b => `<div style="font-size: 1rem; margin-bottom: 0.5rem; font-weight: 500;">🎈 ${b.name} - <span style="color: var(--text-secondary);">${b.dayDisplay}</span></div>`).join('') 
+                        : '<div style="color: var(--text-secondary);">Sem aniversários esta semana.</div>'}
+                </div>
+            </div>
+        </div>
+        <div class="section-header"><h2>Todos os Aniversários</h2></div>
+        <div class="appointments-list">
+    `;
+
+    if (clientsWithBday.length === 0) {
+        html += '<div class="empty-state">Nenhum cliente com data de nascimento registada.</div>';
+    } else {
+        const months = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+        
+        let currentMonth = -1;
+        clientsWithBday.forEach(client => {
+            const [y, m, d] = client.birthdate.split('-');
+            const monthIdx = parseInt(m) - 1;
+            
+            if (monthIdx !== currentMonth) {
+                currentMonth = monthIdx;
+                html += `<div style="margin-top: 1.5rem; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-primary); font-size: 1.1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">${months[currentMonth]}</div>`;
+            }
+
+            html += `
+                <div class="appointment-item">
+                    <div class="appt-time" style="width: auto; min-width: 50px;">${d}/${m}</div>
+                    <div class="appt-details">
+                        <span class="client-name">${client.name}</span>
+                        <span class="appt-type"><i class="ph ph-phone"></i> ${client.phone || 'Sem contacto'}</span>
+                    </div>
+                    <div class="appt-actions">
+                        <button type="button" class="btn js-bday-msg-btn" data-name="${client.name}" title="Enviar Mensagem de Parabéns" style="background: var(--rose); color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 4px;"><i class="ph ph-paper-plane-tilt"></i> Parabéns</button>
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    html += `</div>`;
+    contentArea.innerHTML = html;
+}
+
 function renderBackup() {
     pageTitle.textContent = "Backup";
     contentArea.innerHTML = `
@@ -456,6 +543,8 @@ function setupEventDelegation() {
         if (editServiceBtn) triggerEditService(editServiceBtn.dataset.id);
         const msgBtn = e.target.closest('.js-msg-btn');
         if (msgBtn) triggerMessage(msgBtn.dataset.name, msgBtn.dataset.time);
+        const bdayMsgBtn = e.target.closest('.js-bday-msg-btn');
+        if (bdayMsgBtn) triggerBdayMessage(bdayMsgBtn.dataset.name);
         const delBtn = e.target.closest('.js-delete-btn');
         if (delBtn) triggerDelete(delBtn.dataset.type, delBtn.dataset.id);
     });
@@ -510,6 +599,15 @@ function triggerMessage(name, time) {
     const hourLabel = time || '[Hora]';
     const firstName = (client ? client.name : name).split(' ')[0];
     document.getElementById('msg-content').value = `Olá, ${firstName}! ✨\nAqui é a Nélia a relembrar que tem marcação amanhã às ${hourLabel}.\nSe não conseguir comparecer, agradeço que me avise.\nMuito obrigada\nAté breve! 😊`;
+    openModal(messageModal);
+}
+
+function triggerBdayMessage(name) {
+    let client = state.clients.find(c => c.name === name);
+    document.getElementById('msg-recipient').value = client ? client.name : name;
+    document.getElementById('msg-phone-hidden').value = client ? client.phone : '';
+    const firstName = (client ? client.name : name).split(' ')[0];
+    document.getElementById('msg-content').value = `Muitos parabéns, ${firstName}! 🎉🎂\nQue o seu dia seja repleto de alegria, amor e muitas coisas boas.\nUm beijinho muito grande da Nélia! 😘`;
     openModal(messageModal);
 }
 
