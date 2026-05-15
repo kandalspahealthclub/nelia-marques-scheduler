@@ -458,7 +458,12 @@ function renderBirthdays() {
                 </div>
                 <div>
                     ${bdaysThisWeek.length > 0 ? 
-                        bdaysThisWeek.map(b => `<div style="font-size: 1rem; margin-bottom: 0.5rem; font-weight: 500;">🎈 ${b.name} - <span style="color: var(--text-secondary);">${b.dayDisplay}</span></div>`).join('') 
+                        bdaysThisWeek.map(b => `
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px dashed var(--border-color); flex-wrap: wrap; gap: 0.5rem;">
+                                <div style="font-size: 1rem; font-weight: 500;">🎈 ${b.name} - <span style="color: var(--text-secondary);">${b.dayDisplay}</span></div>
+                                <button type="button" class="btn js-bday-msg-btn" data-name="${b.name}" title="Enviar Mensagem de Parabéns" style="background: var(--rose); color: white; border: none; padding: 6px 12px; border-radius: 8px; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 6px; width: auto; height: auto;"><i class="ph ph-paper-plane-tilt"></i> Parabéns</button>
+                            </div>
+                        `).join('') 
                         : '<div style="color: var(--text-secondary);">Sem aniversários esta semana.</div>'}
                 </div>
             </div>
