@@ -232,6 +232,15 @@ h1 {
     margin-bottom: 3rem;
 }
 
+.stats-grid {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+.agenda-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+}
+
 .card {
     background-color: var(--bg-card);
     border: 1px solid var(--border-color);
@@ -717,7 +726,7 @@ h1 {
         padding-bottom: 100px;
     }
 
-    .dashboard-grid {
+    .dashboard-grid, .stats-grid, .agenda-grid {
         grid-template-columns: 1fr;
         gap: 1rem;
     }

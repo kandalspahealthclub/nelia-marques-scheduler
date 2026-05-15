@@ -236,7 +236,7 @@ function renderDashboard() {
     const bdays = getWeekBirthdays();
 
     contentArea.innerHTML = `
-        <div class="dashboard-grid" style="grid-template-columns: repeat(3, 1fr);">
+        <div class="dashboard-grid stats-grid">
             <div class="card stat-card">
                 <div class="stat-header"><span class="stat-icon"><i class="ph ph-trend-up"></i></span></div>
                 <div class="stat-info"><span class="label">Hoje</span><span class="value">${todaysAppts.length}</span></div>
@@ -255,7 +255,7 @@ function renderDashboard() {
                 </div>
             </div>
         </div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+        <div class="dashboard-grid agenda-grid">
             <div>
                 <div class="section-header"><h2>Agenda de Hoje</h2><span class="date-badge">${todayDisplay}</span></div>
                 <div class="appointments-list">${todaysAppts.length > 0 ? todaysAppts.map(formatAppt).join('') : '<div class="empty-state">Sem marcações para hoje.</div>'}</div>
