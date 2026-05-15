@@ -490,7 +490,7 @@ function renderBirthdays() {
                         <span class="appt-type"><i class="ph ph-phone"></i> ${client.phone || 'Sem contacto'}</span>
                     </div>
                     <div class="appt-actions">
-                        <button type="button" class="btn js-bday-msg-btn" data-name="${client.name}" title="Enviar Mensagem de Parabéns" style="background: var(--rose); color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 4px;"><i class="ph ph-paper-plane-tilt"></i> Parabéns</button>
+                        <button type="button" class="btn js-bday-msg-btn" data-name="${client.name}" title="Enviar Mensagem de Parabéns" style="background: var(--rose); color: white; border: none; padding: 8px 16px; border-radius: 8px; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 6px; width: auto; height: auto;"><i class="ph ph-paper-plane-tilt"></i> Parabéns</button>
                     </div>
                 </div>
             `;
