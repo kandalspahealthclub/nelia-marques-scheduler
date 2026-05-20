@@ -173,6 +173,7 @@ function refreshCurrentView() {
     else if (view === 'services') renderServices();
     else if (view === 'reports') renderReports();
     else if (view === 'birthdays') renderBirthdays();
+    else if (view === 'massmsg') renderMassMessage();
     else if (view === 'backup') renderBackup();
 }
 
@@ -504,6 +505,229 @@ function renderBirthdays() {
 
     html += `</div>`;
     contentArea.innerHTML = html;
+}
+
+function renderMassMessage() {
+    pageTitle.textContent = "Mensagens em Massa";
+
+    contentArea.innerHTML = `
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; align-items: start;">
+
+            <!-- Left: Composer -->
+            <div class="card" style="padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem;">
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <span style="background: linear-gradient(135deg, #667eea, #764ba2); width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        <i class="ph ph-megaphone" style="color: white; font-size: 1.25rem;"></i>
+                    </span>
+                    <div>
+                        <h3 style="margin: 0; font-size: 1.05rem;">Compor Mensagem</h3>
+                        <div style="font-size: 0.8rem; color: var(--text-secondary);">Escreva e envie para os clientes selecionados</div>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin: 0;">
+                    <label style="font-weight: 600; font-size: 0.85rem; color: var(--text-secondary);">Mensagem</label>
+                    <textarea id="mass-msg-content" rows="10"
+                        placeholder="Escreva a sua mensagem aqui...
+
+Ex: Olá! Venho relembrar a sua marcação amanhã às 10h. Obrigada! 😊"
+                        style="width: 100%; resize: vertical; min-height: 220px; font-family: var(--font-body); border: 1.5px solid var(--border-color); border-radius: 12px; padding: 12px; font-size: 0.95rem; line-height: 1.6; box-sizing: border-box; transition: border-color 0.2s;"
+                        onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border-color)'"></textarea>
+                    <div style="text-align: right; font-size: 0.78rem; color: var(--text-tertiary); margin-top: 4px;">
+                        <span id="mass-msg-char-count">0</span> caracteres
+                    </div>
+                </div>
+
+                <div id="mass-wa-progress" style="display: none; padding: 12px 16px; border-radius: 12px; background: var(--accent-light); font-size: 0.9rem; display: none; align-items: center; gap: 10px; flex-wrap: wrap;"></div>
+
+                <div style="font-size: 0.85rem; color: var(--text-secondary); text-align: center; padding: 4px 0;">
+                    <i class="ph ph-users" style="font-size: 1rem;"></i>
+                    <span id="selected-count" style="font-weight: 700; color: var(--accent);">0</span> cliente(s) selecionado(s)
+                </div>
+
+                <button id="btn-mass-whatsapp" class="btn"
+                    style="background: linear-gradient(135deg, #25D366, #128C7E); color: white; width: 100%; justify-content: center; border: none; gap: 10px; padding: 13px; border-radius: 12px; font-size: 0.95rem; font-weight: 600; box-shadow: 0 4px 12px rgba(37,211,102,0.3); transition: opacity 0.2s;">
+                    <i class="ph ph-whatsapp-logo" style="font-size: 1.3rem;"></i> Enviar via WhatsApp
+                </button>
+                <button id="btn-mass-sms" class="btn"
+                    style="background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; width: 100%; justify-content: center; border: none; gap: 10px; padding: 13px; border-radius: 12px; font-size: 0.95rem; font-weight: 600; box-shadow: 0 4px 12px rgba(59,130,246,0.3); transition: opacity 0.2s;">
+                    <i class="ph ph-device-mobile" style="font-size: 1.3rem;"></i> Enviar via SMS (Nativa)
+                </button>
+            </div>
+
+            <!-- Right: Client selector -->
+            <div class="card" style="padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem;">
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <span style="background: linear-gradient(135deg, #f093fb, #f5576c); width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        <i class="ph ph-users" style="color: white; font-size: 1.25rem;"></i>
+                    </span>
+                    <div>
+                        <h3 style="margin: 0; font-size: 1.05rem;">Destinatários</h3>
+                        <div style="font-size: 0.8rem; color: var(--text-secondary);">Selecione os clientes a contactar</div>
+                    </div>
+                </div>
+
+                <div style="position: relative;">
+                    <i class="ph ph-magnifying-glass" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-tertiary);"></i>
+                    <input type="text" id="mass-client-search" placeholder="Pesquisar clientes..."
+                        style="width: 100%; padding: 10px 12px 10px 38px; border: 1.5px solid var(--border-color); border-radius: 10px; font-size: 0.9rem; background: var(--bg-card); box-sizing: border-box; transition: border-color 0.2s;"
+                        onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border-color)'">
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: var(--bg-hover); border-radius: 10px; border: 1px solid var(--border-color);">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.9rem; font-weight: 600;">
+                        <input type="checkbox" id="mass-select-all" style="width: 17px; height: 17px; accent-color: var(--accent); cursor: pointer;">
+                        Selecionar Todos
+                    </label>
+                    <span id="mass-client-total" style="font-size: 0.82rem; color: var(--text-secondary);"></span>
+                </div>
+
+                <div id="mass-client-list" style="overflow-y: auto; max-height: 420px; display: flex; flex-direction: column; gap: 0.4rem;">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+        </div>
+    `;
+
+    // ── helpers ──────────────────────────────────────────────────────────
+    const normalize = (str) => (str || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+
+    const getSelected = () =>
+        [...document.querySelectorAll('.mass-client-check:checked')].map(cb => ({
+            name: cb.dataset.name,
+            phone: cb.dataset.phone
+        }));
+
+    const updateSelectedCount = () => {
+        const n = getSelected().length;
+        const el = document.getElementById('selected-count');
+        if (el) el.textContent = n;
+        const allCbs = document.querySelectorAll('.mass-client-check');
+        const selAll = document.getElementById('mass-select-all');
+        if (selAll && allCbs.length > 0) selAll.checked = (n === allCbs.length);
+    };
+
+    const renderClientList = (filter = '') => {
+        const filtered = state.clients.filter(c =>
+            !filter || normalize(c.name).includes(normalize(filter)) || (c.phone && normalize(c.phone).includes(normalize(filter)))
+        );
+        const totalEl = document.getElementById('mass-client-total');
+        if (totalEl) totalEl.textContent = `${filtered.length} cliente(s)`;
+
+        const listEl = document.getElementById('mass-client-list');
+        if (!listEl) return;
+
+        if (filtered.length === 0) {
+            listEl.innerHTML = '<div class="empty-state">Nenhum cliente encontrado.</div>';
+            return;
+        }
+        listEl.innerHTML = filtered.map(client => {
+            const hasPhone = !!client.phone;
+            return `
+                <label style="display: flex; align-items: center; gap: 12px; padding: 10px 14px; border: 1.5px solid var(--border-color); border-radius: 10px; background: var(--bg-card); cursor: pointer; transition: all 0.15s; user-select: none;"
+                    onmouseover="this.style.borderColor='var(--accent)'; this.style.background='var(--accent-light)'"
+                    onmouseout="this.style.borderColor='var(--border-color)'; this.style.background='var(--bg-card)'">
+                    <input type="checkbox" class="mass-client-check"
+                        data-id="${client.id}" data-name="${client.name}" data-phone="${client.phone || ''}"
+                        style="width: 17px; height: 17px; accent-color: var(--accent); flex-shrink: 0; cursor: pointer;">
+                    <div style="flex: 1; min-width: 0;">
+                        <div style="font-weight: 500; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${client.name}</div>
+                        <div style="font-size: 0.78rem; color: var(--text-secondary); margin-top: 2px;">
+                            <i class="ph ph-phone"></i> ${client.phone || '<em>Sem contacto</em>'}
+                        </div>
+                    </div>
+                    ${!hasPhone ? '<span style="font-size: 0.7rem; background: #fef3c7; color: #92400e; padding: 3px 8px; border-radius: 20px; flex-shrink: 0; font-weight: 600;">Sem tel.</span>' : ''}
+                </label>
+            `;
+        }).join('');
+        updateSelectedCount();
+    };
+
+    renderClientList();
+
+    // ── search ────────────────────────────────────────────────────────────
+    document.getElementById('mass-client-search').addEventListener('input', e => renderClientList(e.target.value));
+
+    // ── select all ───────────────────────────────────────────────────────
+    document.getElementById('mass-select-all').addEventListener('change', e => {
+        document.querySelectorAll('.mass-client-check').forEach(cb => cb.checked = e.target.checked);
+        updateSelectedCount();
+    });
+
+    // ── individual checkbox changes ───────────────────────────────────────
+    document.getElementById('mass-client-list').addEventListener('change', e => {
+        if (e.target.classList.contains('mass-client-check')) updateSelectedCount();
+    });
+
+    // ── char counter ─────────────────────────────────────────────────────
+    document.getElementById('mass-msg-content').addEventListener('input', e => {
+        const el = document.getElementById('mass-msg-char-count');
+        if (el) el.textContent = e.target.value.length;
+    });
+
+    // ── WhatsApp sequential send ──────────────────────────────────────────
+    document.getElementById('btn-mass-whatsapp').addEventListener('click', () => {
+        const msg = document.getElementById('mass-msg-content').value.trim();
+        if (!msg) { showNotification('Escreva uma mensagem primeiro!'); return; }
+
+        const recipients = getSelected().filter(c => c.phone);
+        if (recipients.length === 0) {
+            showNotification('Selecione pelo menos um cliente com número de telefone.');
+            return;
+        }
+
+        // Store queue globally so the "Próximo" button can advance it
+        window._massWaQueue = recipients;
+        window._massWaIndex = 0;
+        window._massWaMsg = msg;
+        window.massWaNext = function() {
+            const idx = window._massWaIndex;
+            const queue = window._massWaQueue;
+            const message = window._massWaMsg;
+            const progressEl = document.getElementById('mass-wa-progress');
+            if (!progressEl) return;
+            if (idx >= queue.length) {
+                progressEl.style.display = 'flex';
+                progressEl.style.background = '#d1fae5';
+                progressEl.innerHTML = `<i class="ph ph-check-circle" style="color:#10b981; font-size:1.3rem;"></i> <span>Concluído! <strong>${queue.length}</strong> mensagem(ns) enviada(s) via WhatsApp.</span>`;
+                window._massWaQueue = [];
+                return;
+            }
+            const c = queue[idx];
+            const phone = c.phone.replace(/\D/g, '');
+            window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank');
+            window._massWaIndex++;
+            const next = window._massWaIndex;
+            progressEl.style.display = 'flex';
+            progressEl.style.background = 'var(--accent-light)';
+            if (next < queue.length) {
+                progressEl.innerHTML = `
+                    <i class="ph ph-paper-plane-tilt" style="color:var(--accent); font-size:1.2rem; flex-shrink:0;"></i>
+                    <span style="flex:1;">Enviado para <strong>${c.name}</strong> &mdash; ${next}/${queue.length}</span>
+                    <button onclick="window.massWaNext()" style="border:none; background:var(--accent); color:white; border-radius:8px; padding:6px 14px; cursor:pointer; font-size:0.85rem; font-weight:600;">Próximo &rsaquo;</button>
+                `;
+            } else {
+                // Last one, auto-finish
+                progressEl.innerHTML = `<i class="ph ph-spinner" style="color:var(--accent); font-size:1.2rem;"></i> <span>Enviado para <strong>${c.name}</strong>. A fechar...</span>`;
+                setTimeout(() => window.massWaNext(), 800);
+            }
+        };
+        window.massWaNext();
+    });
+
+    // ── SMS native send ───────────────────────────────────────────────────
+    document.getElementById('btn-mass-sms').addEventListener('click', () => {
+        const msg = document.getElementById('mass-msg-content').value.trim();
+        if (!msg) { showNotification('Escreva uma mensagem primeiro!'); return; }
+
+        const phones = getSelected().map(c => c.phone.replace(/\D/g, '')).filter(p => p);
+        if (phones.length === 0) {
+            showNotification('Selecione pelo menos um cliente com número de telefone.');
+            return;
+        }
+        // sms: URI — works natively on mobile; on desktop may open default SMS app
+        window.location.href = `sms:${phones.join(',')}?&body=${encodeURIComponent(msg)}`;
+    });
 }
 
 function renderBackup() {
