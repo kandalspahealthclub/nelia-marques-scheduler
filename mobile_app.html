@@ -454,6 +454,7 @@
                 flex-direction: column;
             }
 
+            /* ---- BOTTOM NAV ---- */
             .sidebar {
                 position: fixed;
                 bottom: 0;
@@ -461,12 +462,12 @@
                 width: 100%;
                 height: auto;
                 flex-direction: row;
-                padding: 0.5rem;
+                padding: 0;
                 border-top: 1px solid var(--border-color);
-                justify-content: space-around;
                 background: white;
-                box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.05);
-                padding-bottom: max(10px, env(safe-area-inset-bottom));
+                box-shadow: 0 -2px 10px rgba(0,0,0,0.08);
+                padding-bottom: env(safe-area-inset-bottom);
+                z-index: 900;
             }
 
             .brand,
@@ -477,26 +478,33 @@
             .nav-menu {
                 flex-direction: row;
                 width: 100%;
-                justify-content: space-around;
+                justify-content: stretch;
+                gap: 0;
             }
 
             .nav-item {
+                flex: 1;
                 flex-direction: column;
-                padding: 0.5rem;
-                gap: 4px;
-                font-size: 0.75rem;
+                padding: 10px 4px 8px;
+                gap: 2px;
                 text-align: center;
-                border-radius: 8px;
+                border-radius: 0;
                 color: var(--text-tertiary);
                 font-weight: 500;
-                min-width: 60px;
+                border: none;
+                background: transparent;
+                min-width: 0;
             }
 
             .nav-item i {
                 font-size: 1.5rem;
                 margin: 0 !important;
                 display: block;
-                margin-bottom: 2px !important;
+            }
+
+            /* Esconder labels de texto na barra inferior — só ícones */
+            .nav-item span {
+                display: none;
             }
 
             .nav-item.active {
@@ -504,11 +512,22 @@
                 color: var(--accent);
             }
 
-            /* Hide Text Labels on very small screens if needed, but here we style perfectly */
+            .nav-item.active i {
+                transform: translateY(-1px);
+            }
 
+            /* ---- MAIN CONTENT ---- */
             .main-content {
-                padding: 1.25rem;
-                padding-bottom: 100px;
+                padding: 1rem;
+                padding-bottom: calc(70px + env(safe-area-inset-bottom));
+            }
+
+            .top-bar {
+                margin-bottom: 1rem;
+            }
+
+            h1 {
+                font-size: 1.4rem;
             }
 
             .dashboard-grid {
@@ -520,7 +539,7 @@
                 flex-direction: column;
                 align-items: flex-start;
                 gap: 0.5rem;
-                padding: 1.25rem;
+                padding: 1rem;
             }
 
             .appt-time {
@@ -532,13 +551,13 @@
                 width: 100%;
                 display: flex;
                 gap: 0.5rem;
-                margin-top: 0.5rem;
+                margin-top: 0.25rem;
             }
 
             .appt-actions button {
                 flex: 1;
                 margin: 0;
-                padding: 0.75rem;
+                padding: 0.65rem;
                 justify-content: center;
             }
         }
@@ -656,6 +675,7 @@
                 <button class="nav-item" data-view="calendar">Agenda</button>
                 <button class="nav-item" data-view="clients">Clientes</button>
                 <button class="nav-item" data-view="services">Serviços</button>
+                <button class="nav-item" data-view="messages">Enviadas</button>
             </nav>
         </aside>
 
@@ -814,7 +834,7 @@
         var btnNewClient = document.getElementById('btn-new-client');
 
         // ICONS & NAV
-        var navIcons = { 'dashboard': 'ph-squares-four', 'calendar': 'ph-calendar-blank', 'clients': 'ph-users', 'services': 'ph-briefcase' };
+        var navIcons = { 'dashboard': 'ph-squares-four', 'calendar': 'ph-calendar-blank', 'clients': 'ph-users', 'services': 'ph-briefcase', 'messages': 'ph-paper-plane-tilt' };
         // Mobile Nav Icon Fix: Insert Icon structured for column layout
         for (var i = 0; i < navItems.length; i++) {
             (function (item) {
@@ -855,6 +875,7 @@
             else if (view === 'calendar') renderCalendar();
             else if (view === 'clients') renderClients();
             else if (view === 'services') renderServices();
+            else if (view === 'messages') renderMessages();
         }
 
         function brandedConfirm(message, callback) {
@@ -1008,58 +1029,58 @@
             pageTitle.textContent = "Mensagens";
 
             if (!state.messages || state.messages.length === 0) {
-                contentArea.innerHTML = '<div style="text-align:center; padding:3rem 1rem; color:var(--text-secondary);">' +
-                    '<i class="ph ph-paper-plane-tilt" style="font-size:3rem; opacity:0.3; display:block; margin-bottom:1rem;"></i>' +
-                    '<p style="font-size:0.95rem;">Sem mensagens enviadas.</p>' +
+                contentArea.innerHTML =
+                    '<div style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding:4rem 1rem; color:var(--text-tertiary); text-align:center;">' +
+                        '<i class="ph ph-paper-plane-tilt" style="font-size:2.5rem; margin-bottom:0.75rem; opacity:0.4;"></i>' +
+                        '<p style="font-size:0.9rem;">Ainda não há mensagens enviadas.</p>' +
                     '</div>';
                 return;
             }
 
             var msgs = state.messages.slice().reverse();
-            var html = '<div style="display:flex; flex-direction:column; gap:0.75rem; padding-bottom:1rem;">';
+            var html = '';
 
             msgs.forEach(function(m) {
                 var isWA = (m.method === 'WhatsApp');
-                var methodColor = isWA ? '#25D366' : '#3b82f6';
-                var methodIcon = isWA ? 'ph-whatsapp-logo' : 'ph-device-mobile';
-                var methodLabel = isWA ? 'WhatsApp' : 'SMS';
+                var badgeBg = isWA ? '#dcfce7' : '#dbeafe';
+                var badgeColor = isWA ? '#16a34a' : '#1d4ed8';
+                var badgeIcon = isWA ? 'ph-whatsapp-logo' : 'ph-device-mobile';
 
-                // Truncate message preview to 2 lines
-                var preview = (m.content || '').replace(/\n/g, ' ').trim();
-                if (preview.length > 80) preview = preview.substring(0, 80) + '…';
-
-                // Recipient name (strip phone if stored as phone)
-                var recipientName = m.to || '—';
+                // Recipient display name
+                var recipient = m.to || '—';
                 var client = state.clients.find(function(c) { return c.name === m.to || c.phone === m.to; });
-                if (client) recipientName = client.name;
+                if (client) recipient = client.name;
+                var initial = recipient.charAt(0).toUpperCase();
+
+                // Short preview — first line only, max 60 chars
+                var firstLine = (m.content || '').split('\n')[0].trim();
+                if (firstLine.length > 60) firstLine = firstLine.substring(0, 60) + '…';
 
                 html +=
-                    '<div style="background:white; border-radius:16px; border:1px solid var(--border-color); padding:1rem; box-shadow:var(--shadow-sm);">' +
-                        // Header row: name + method badge + delete
-                        '<div style="display:flex; align-items:center; gap:0.6rem; margin-bottom:0.5rem;">' +
-                            '<div style="width:36px; height:36px; border-radius:10px; background:var(--accent-light); color:var(--accent); display:flex; align-items:center; justify-content:center; flex-shrink:0; font-weight:700; font-size:0.85rem;">' +
-                                recipientName.charAt(0).toUpperCase() +
-                            '</div>' +
-                            '<div style="flex:1; min-width:0;">' +
-                                '<div style="font-weight:700; font-size:0.95rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + recipientName + '</div>' +
-                                '<div style="font-size:0.75rem; color:var(--text-secondary);">' + (m.date || '') + (m.time ? ' • ' + m.time : '') + '</div>' +
-                            '</div>' +
-                            '<span style="background:' + methodColor + '1a; color:' + methodColor + '; border-radius:20px; padding:3px 10px; font-size:0.72rem; font-weight:700; display:flex; align-items:center; gap:4px; flex-shrink:0;">' +
-                                '<i class="ph ' + methodIcon + '"></i> ' + methodLabel +
-                            '</span>' +
-                            '<button onclick="del(\'message\',' + m.id + ')" style="background:none; border:none; color:#cbd5e1; padding:4px; cursor:pointer; flex-shrink:0;">' +
-                                '<i class="ph ph-trash" style="font-size:1.1rem;"></i>' +
-                            '</button>' +
+                    '<div style="display:flex; align-items:center; gap:0.75rem; padding:0.85rem 0; border-bottom:1px solid var(--border-color);">' +
+                        // Avatar
+                        '<div style="width:42px; height:42px; border-radius:50%; background:var(--accent-light); color:var(--accent); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:1rem; flex-shrink:0;">' +
+                            initial +
                         '</div>' +
-                        // Message preview
-                        '<div style="font-size:0.82rem; color:var(--text-secondary); background:var(--bg-app); border-radius:10px; padding:0.6rem 0.8rem; line-height:1.5;">' +
-                            preview +
+                        // Text block
+                        '<div style="flex:1; min-width:0;">' +
+                            '<div style="display:flex; align-items:center; gap:0.4rem; margin-bottom:2px;">' +
+                                '<span style="font-weight:700; font-size:0.9rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + recipient + '</span>' +
+                                '<span style="background:' + badgeBg + '; color:' + badgeColor + '; border-radius:20px; padding:1px 7px; font-size:0.65rem; font-weight:700; flex-shrink:0; display:inline-flex; align-items:center; gap:3px;">' +
+                                    '<i class="ph ' + badgeIcon + '"></i>' + (isWA ? 'WA' : 'SMS') +
+                                '</span>' +
+                            '</div>' +
+                            '<div style="font-size:0.78rem; color:var(--text-secondary); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + firstLine + '</div>' +
+                            '<div style="font-size:0.7rem; color:var(--text-tertiary); margin-top:2px;">' + (m.date || '') + (m.time ? ' · ' + m.time : '') + '</div>' +
                         '</div>' +
+                        // Delete
+                        '<button onclick="del(\'message\',' + m.id + ')" style="background:none; border:none; color:#cbd5e1; padding:6px; cursor:pointer; flex-shrink:0; border-radius:8px;">' +
+                            '<i class="ph ph-trash" style="font-size:1.1rem;"></i>' +
+                        '</button>' +
                     '</div>';
             });
 
-            html += '</div>';
-            contentArea.innerHTML = html;
+            contentArea.innerHTML = '<div style="padding-bottom:0.5rem;">' + html + '</div>';
         }
         var mobileSearchInput = document.getElementById('mobile-client-search');
         if (mobileSearchInput) {
