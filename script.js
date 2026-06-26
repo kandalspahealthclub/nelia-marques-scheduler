@@ -468,84 +468,73 @@ function renderBirthdays() {
 }
 
 function renderMassMessage() {
-    pageTitle.textContent = "Mensagens em Massa";
+    pageTitle.textContent = "Mensagens";
 
     contentArea.innerHTML = `
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; align-items: start;">
+        <div style="display: flex; flex-direction: column; gap: 1.25rem;">
 
-            <!-- Left: Composer -->
-            <div class="card" style="padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem;">
+            <!-- Painel: Destinatários -->
+            <div class="card" style="padding: 1.25rem; display: flex; flex-direction: column; gap: 0.875rem;">
                 <div style="display: flex; align-items: center; gap: 0.75rem;">
-                    <span style="background: linear-gradient(135deg, #667eea, #764ba2); width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                        <i class="ph ph-megaphone" style="color: white; font-size: 1.25rem;"></i>
+                    <span style="background: linear-gradient(135deg, #f093fb, #f5576c); width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        <i class="ph ph-users" style="color: white; font-size: 1.1rem;"></i>
                     </span>
                     <div>
-                        <h3 style="margin: 0; font-size: 1.05rem;">Compor Mensagem</h3>
-                        <div style="font-size: 0.8rem; color: var(--text-secondary);">Escreva e envie para os clientes selecionados</div>
+                        <div style="font-weight: 700; font-size: 0.95rem;">Destinatários</div>
+                        <div style="font-size: 0.78rem; color: var(--text-secondary);">Selecione os clientes a contactar</div>
                     </div>
+                    <span id="mass-client-total" style="margin-left: auto; font-size: 0.78rem; color: var(--text-secondary); white-space: nowrap;"></span>
                 </div>
 
-                <div class="form-group" style="margin: 0;">
-                    <label style="font-weight: 600; font-size: 0.85rem; color: var(--text-secondary);">Mensagem</label>
-                    <textarea id="mass-msg-content" rows="10"
-                        placeholder="Escreva a sua mensagem aqui...
-
-Ex: Olá! Venho relembrar a sua marcação amanhã às 10h. Obrigada! 😊"
-                        style="width: 100%; resize: vertical; min-height: 220px; font-family: var(--font-body); border: 1.5px solid var(--border-color); border-radius: 12px; padding: 12px; font-size: 0.95rem; line-height: 1.6; box-sizing: border-box; transition: border-color 0.2s;"
-                        onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border-color)'"></textarea>
-                    <div style="text-align: right; font-size: 0.78rem; color: var(--text-tertiary); margin-top: 4px;">
-                        <span id="mass-msg-char-count">0</span> caracteres
+                <!-- Pesquisa + Selecionar todos -->
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <div style="position: relative; flex: 1;">
+                        <i class="ph ph-magnifying-glass" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-tertiary); font-size: 0.9rem;"></i>
+                        <input type="text" id="mass-client-search" placeholder="Pesquisar..."
+                            style="width: 100%; padding: 9px 10px 9px 32px; border: 1.5px solid var(--border-color); border-radius: 10px; font-size: 0.9rem; background: var(--bg-card); box-sizing: border-box;">
                     </div>
+                    <label style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; white-space: nowrap; flex-shrink: 0;">
+                        <input type="checkbox" id="mass-select-all" style="width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer;">
+                        Todos
+                    </label>
                 </div>
 
-                <div id="mass-wa-progress" style="display: none; padding: 12px 16px; border-radius: 12px; background: var(--accent-light); font-size: 0.9rem; display: none; align-items: center; gap: 10px; flex-wrap: wrap;"></div>
-
-                <div style="font-size: 0.85rem; color: var(--text-secondary); text-align: center; padding: 4px 0;">
-                    <i class="ph ph-users" style="font-size: 1rem;"></i>
-                    <span id="selected-count" style="font-weight: 700; color: var(--accent);">0</span> cliente(s) selecionado(s)
+                <!-- Lista de clientes — altura limitada com scroll -->
+                <div id="mass-client-list" style="overflow-y: auto; max-height: 220px; display: flex; flex-direction: column; gap: 0.3rem;">
                 </div>
+            </div>
+
+            <!-- Painel: Compor mensagem -->
+            <div class="card" style="padding: 1.25rem; display: flex; flex-direction: column; gap: 0.875rem;">
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <span style="background: linear-gradient(135deg, #667eea, #764ba2); width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        <i class="ph ph-megaphone" style="color: white; font-size: 1.1rem;"></i>
+                    </span>
+                    <div style="flex: 1;">
+                        <div style="font-weight: 700; font-size: 0.95rem;">Mensagem</div>
+                        <div style="font-size: 0.78rem; color: var(--text-secondary);">
+                            <span id="selected-count" style="font-weight: 700; color: var(--accent);">0</span> cliente(s) selecionado(s)
+                        </div>
+                    </div>
+                    <span style="font-size: 0.75rem; color: var(--text-tertiary);"><span id="mass-msg-char-count">0</span> car.</span>
+                </div>
+
+                <textarea id="mass-msg-content" rows="6"
+                    placeholder="Escreva a sua mensagem aqui...&#10;&#10;Ex: Olá! Lembro a sua marcação amanhã. Obrigada! 😊"
+                    style="width: 100%; resize: none; border: 1.5px solid var(--border-color); border-radius: 10px; padding: 10px 12px; font-size: 0.9rem; line-height: 1.55; box-sizing: border-box; font-family: inherit; background: var(--bg-card);"></textarea>
+
+                <div id="mass-wa-progress" style="display: none; padding: 10px 14px; border-radius: 10px; background: var(--accent-light); font-size: 0.85rem; align-items: center; gap: 8px; flex-wrap: wrap;"></div>
 
                 <button id="btn-mass-whatsapp" class="btn"
-                    style="background: linear-gradient(135deg, #25D366, #128C7E); color: white; width: 100%; justify-content: center; border: none; gap: 10px; padding: 13px; border-radius: 12px; font-size: 0.95rem; font-weight: 600; box-shadow: 0 4px 12px rgba(37,211,102,0.3); transition: opacity 0.2s;">
-                    <i class="ph ph-whatsapp-logo" style="font-size: 1.3rem;"></i> Enviar via WhatsApp
+                    style="background: linear-gradient(135deg, #25D366, #128C7E); color: white; width: 100%; justify-content: center; border: none; gap: 8px; padding: 12px; border-radius: 12px; font-size: 0.9rem; font-weight: 600;">
+                    <i class="ph ph-whatsapp-logo" style="font-size: 1.2rem;"></i> Enviar via WhatsApp
                 </button>
                 <button id="btn-mass-sms" class="btn"
-                    style="background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; width: 100%; justify-content: center; border: none; gap: 10px; padding: 13px; border-radius: 12px; font-size: 0.95rem; font-weight: 600; box-shadow: 0 4px 12px rgba(59,130,246,0.3); transition: opacity 0.2s;">
-                    <i class="ph ph-device-mobile" style="font-size: 1.3rem;"></i> Enviar via SMS (Nativa)
+                    style="background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; width: 100%; justify-content: center; border: none; gap: 8px; padding: 12px; border-radius: 12px; font-size: 0.9rem; font-weight: 600;">
+                    <i class="ph ph-device-mobile" style="font-size: 1.2rem;"></i> Enviar via SMS
                 </button>
             </div>
 
-            <!-- Right: Client selector -->
-            <div class="card" style="padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem;">
-                <div style="display: flex; align-items: center; gap: 0.75rem;">
-                    <span style="background: linear-gradient(135deg, #f093fb, #f5576c); width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                        <i class="ph ph-users" style="color: white; font-size: 1.25rem;"></i>
-                    </span>
-                    <div>
-                        <h3 style="margin: 0; font-size: 1.05rem;">Destinatários</h3>
-                        <div style="font-size: 0.8rem; color: var(--text-secondary);">Selecione os clientes a contactar</div>
-                    </div>
-                </div>
-
-                <div style="position: relative;">
-                    <i class="ph ph-magnifying-glass" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-tertiary);"></i>
-                    <input type="text" id="mass-client-search" placeholder="Pesquisar clientes..."
-                        style="width: 100%; padding: 10px 12px 10px 38px; border: 1.5px solid var(--border-color); border-radius: 10px; font-size: 0.9rem; background: var(--bg-card); box-sizing: border-box; transition: border-color 0.2s;"
-                        onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border-color)'">
-                </div>
-
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: var(--bg-hover); border-radius: 10px; border: 1px solid var(--border-color);">
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.9rem; font-weight: 600;">
-                        <input type="checkbox" id="mass-select-all" style="width: 17px; height: 17px; accent-color: var(--accent); cursor: pointer;">
-                        Selecionar Todos
-                    </label>
-                    <span id="mass-client-total" style="font-size: 0.82rem; color: var(--text-secondary);"></span>
-                </div>
-
-                <div id="mass-client-list" style="overflow-y: auto; max-height: 420px; display: flex; flex-direction: column; gap: 0.4rem;">
-                    <!-- Populated by JS -->
-                </div>
-            </div>
         </div>
     `;
 

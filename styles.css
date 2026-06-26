@@ -681,13 +681,13 @@ h1 {
         width: 100%;
         height: auto;
         flex-direction: row;
-        padding: 0.5rem;
+        padding: 0;
         background: white;
         border-top: 1px solid var(--border-color);
         border-right: none;
-        box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.05);
-        justify-content: space-around;
-        padding-bottom: max(10px, env(safe-area-inset-bottom));
+        box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.08);
+        padding-bottom: env(safe-area-inset-bottom);
+        z-index: 900;
     }
 
     .brand {
@@ -696,19 +696,34 @@ h1 {
 
     .nav-menu {
         flex-direction: row;
-        justify-content: space-around;
         width: 100%;
+        gap: 0;
     }
 
+    /* Barra inferior — só ícones, sem texto, distribuição igual */
     .nav-item {
+        flex: 1;
         flex-direction: column;
-        padding: 0.5rem;
-        gap: 0.25rem;
-        font-size: 0.7rem;
+        padding: 10px 4px 10px;
+        gap: 0;
         text-align: center;
-        border-radius: 8px;
+        border-radius: 0;
         justify-content: center;
         color: var(--text-tertiary);
+        font-size: 0;        /* esconde texto herdado */
+        min-width: 0;
+        overflow: hidden;
+    }
+
+    /* Esconder o span de texto gerado pelo JS */
+    .nav-item span {
+        display: none !important;
+    }
+
+    .nav-item i {
+        font-size: 1.6rem;
+        margin: 0 !important;
+        display: block;
     }
 
     .nav-item.active {
@@ -716,14 +731,14 @@ h1 {
         color: var(--accent);
     }
 
-    .nav-item i {
-        font-size: 1.5rem;
-        margin: 0 !important;
+    .nav-item.active i {
+        transform: translateY(-2px);
+        transition: transform 0.15s ease;
     }
 
     .main-content {
-        padding: 1.5rem;
-        padding-bottom: 100px;
+        padding: 1rem;
+        padding-bottom: calc(65px + env(safe-area-inset-bottom));
     }
 
     .dashboard-grid, .stats-grid, .agenda-grid {
