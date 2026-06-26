@@ -680,7 +680,9 @@ h1 {
         left: 0;
         width: 100%;
         height: auto;
+        display: flex;
         flex-direction: row;
+        align-items: stretch;
         padding: 0;
         background: white;
         border-top: 1px solid var(--border-color);
@@ -688,6 +690,8 @@ h1 {
         box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.08);
         padding-bottom: env(safe-area-inset-bottom);
         z-index: 900;
+        /* sobrepor altura desktop */
+        height: auto !important;
     }
 
     .brand {
@@ -698,21 +702,27 @@ h1 {
         flex-direction: row;
         width: 100%;
         gap: 0;
+        flex: none; /* cancelar flex:1 do desktop */
     }
 
     /* Barra inferior — só ícones, sem texto, distribuição igual */
     .nav-item {
         flex: 1;
+        display: flex;
         flex-direction: column;
-        padding: 10px 4px 10px;
+        align-items: center;
+        justify-content: center;
+        padding: 10px 2px;
         gap: 0;
         text-align: center;
         border-radius: 0;
-        justify-content: center;
         color: var(--text-tertiary);
-        font-size: 0;        /* esconde texto herdado */
+        font-size: 0;
         min-width: 0;
         overflow: hidden;
+        background: transparent;
+        border: none;
+        cursor: pointer;
     }
 
     /* Esconder o span de texto gerado pelo JS */
@@ -721,9 +731,10 @@ h1 {
     }
 
     .nav-item i {
-        font-size: 1.6rem;
+        font-size: 1.55rem;
         margin: 0 !important;
         display: block;
+        color: inherit;
     }
 
     .nav-item.active {
