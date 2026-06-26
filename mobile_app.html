@@ -656,7 +656,6 @@
                 <button class="nav-item" data-view="calendar">Agenda</button>
                 <button class="nav-item" data-view="clients">Clientes</button>
                 <button class="nav-item" data-view="services">Serviços</button>
-                <button class="nav-item" data-view="reports">Relatórios</button>
             </nav>
         </aside>
 
@@ -669,8 +668,6 @@
                             class="ph ph-plus"></i> Serviço</button>
                     <button class="btn btn-primary" id="btn-new-client" style="display: none;"><i
                             class="ph ph-plus"></i> Cliente</button>
-                    <button class="btn btn-primary" id="btn-print-report" style="display: none; background: #64748b;"><i
-                            class="ph ph-file-pdf"></i> PDF</button>
                 </div>
             </header>
             <div id="mobile-search-container" style="display: none; padding: 12px 1.25rem; background: var(--bg-app);">
@@ -817,7 +814,7 @@
         var btnNewClient = document.getElementById('btn-new-client');
 
         // ICONS & NAV
-        var navIcons = { 'dashboard': 'ph-squares-four', 'calendar': 'ph-calendar-blank', 'clients': 'ph-users', 'services': 'ph-briefcase', 'reports': 'ph-chart-pie' };
+        var navIcons = { 'dashboard': 'ph-squares-four', 'calendar': 'ph-calendar-blank', 'clients': 'ph-users', 'services': 'ph-briefcase' };
         // Mobile Nav Icon Fix: Insert Icon structured for column layout
         for (var i = 0; i < navItems.length; i++) {
             (function (item) {
@@ -843,8 +840,6 @@
             if (btnNewAppt) btnNewAppt.style.display = (v === 'calendar') ? 'inline-flex' : 'none';
             if (btnNewService) btnNewService.style.display = (v === 'services') ? 'inline-flex' : 'none';
             if (btnNewClient) btnNewClient.style.display = (v === 'clients') ? 'inline-flex' : 'none';
-            var btnPrint = document.getElementById('btn-print-report');
-            if (btnPrint) btnPrint.style.display = (v === 'reports') ? 'inline-flex' : 'none';
             var mobileSearch = document.getElementById('mobile-search-container');
             if (mobileSearch) {
                 mobileSearch.style.display = (v === 'clients' || v === 'services') ? 'block' : 'none';
@@ -860,7 +855,6 @@
             else if (view === 'calendar') renderCalendar();
             else if (view === 'clients') renderClients();
             else if (view === 'services') renderServices();
-            else if (view === 'reports') renderReports();
         }
 
         function brandedConfirm(message, callback) {
@@ -1016,93 +1010,6 @@
                 return '<div class="appointment-item"><div class="appt-details" style="flex:1;"><span class="client-name">Para: ' + m.to + '</span><span class="appt-type">' + m.method + ' • ' + m.date + '</span><div style="font-size:0.85rem;margin-top:4px;">' + m.content + '</div></div><div class="appt-actions"><button onclick="del(\'message\',' + m.id + ')" style="color:red;"><i class="ph ph-trash"></i></button></div></div>';
             }).join('');
         }
-        function renderReports() {
-            pageTitle.textContent = "Relatórios";
-            if (!state.selectedReportMonth) {
-                state.selectedReportMonth = new Date().toISOString().substring(0, 7);
-            }
-            var selectedMonth = state.selectedReportMonth;
-            var monthAppts = state.appointments.filter(function (a) { return a.date.indexOf(selectedMonth) === 0; });
-
-            var summary = {};
-            var total = 0;
-
-            monthAppts.forEach(function (a) {
-                var p = 0;
-                if (a.price !== undefined) {
-                    p = parseFloat(a.price);
-                } else {
-                    var s = state.services.find(function (sv) { return sv.name === a.type; });
-                    p = s ? parseFloat(s.price) : 0;
-                }
-
-                if (!summary[a.type]) summary[a.type] = { count: 0, revenue: 0 };
-                summary[a.type].count++;
-                summary[a.type].revenue += p;
-                total += p;
-            });
-
-            var displayDate = new Date(selectedMonth + '-01');
-            var monthName = displayDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
-
-            var html = '<div class="report-controls no-print" style="margin-bottom: 1.5rem; padding: 1rem; background: #fff; border-radius: 12px; border: 1px solid var(--border-color);">' +
-                '<label style="display:block; font-size:0.8rem; font-weight:600; color:#666; margin-bottom:8px;">Mês de Referência:</label>' +
-                '<input type="month" id="mobile-report-month" value="' + selectedMonth + '" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; font-family:inherit;">' +
-                '<button class="btn" onclick="downloadBackup()" style="width:100%; margin-top:10px; background:#f8fafc; color:#64748b; border:1px solid #e2e8f0; font-size:0.9rem;"><i class="ph ph-cloud-arrow-down"></i> Fazer Backup de Segurança</button>' +
-                '</div>' +
-                '<div id="printable-report" class="report-paper">' +
-                '  <div class="report-header-professional no-screen">' +
-                '    <img src="logo.png" style="width: 70px; height: auto; margin: 0;">' +
-                '    <div class="report-header-text">' +
-                '       <h1>RELATÓRIO MENSAL</h1>' +
-                '       <p>Referente a ' + monthName + '</p>' +
-                '    </div>' +
-                '  </div>' +
-                '  <div class="report-dashboard-grid">' +
-                '    <div class="card report-summary-item">' +
-                '       <div class="report-label">Faturamento Total</div>' +
-                '       <div class="report-value">€ ' + total.toFixed(2) + '</div>' +
-                '    </div>' +
-                '    <div class="card report-summary-item">' +
-                '       <div class="report-label">Atendimentos</div>' +
-                '       <div class="report-value">' + monthAppts.length + '</div>' +
-                '    </div>' +
-                '  </div>' +
-                '  <div class="card report-details-card">' +
-                '    <div class="report-details-header">Detalhes dos Serviços (v3)</div>' +
-                '    <div class="report-table">' +
-                '       <div class="table-header">' +
-                '           <div class="col-service">Serviço</div>' +
-                '           <div class="col-qty">Qtd</div>' +
-                '           <div class="col-total">Total</div>' +
-                '       </div>';
-
-            var keys = Object.keys(summary);
-            if (keys.length > 0) {
-                keys.forEach(function (k) {
-                    html += '<div class="report-row">' +
-                        '<div class="col-service">' + k + '</div>' +
-                        '<div class="col-qty">' + summary[k].count + '</div>' +
-                        '<div class="col-total" style="font-weight:600;">€ ' + summary[k].revenue.toFixed(2) + '</div>' +
-                        '</div>';
-                });
-            } else {
-                html += '<div style="padding:2rem; text-align:center; color:#999;">Sem dados.</div>';
-            }
-            html += '</div></div>' +
-                '  <div class="report-signature no-screen">' +
-                '  </div>' +
-                '</div>';
-            contentArea.innerHTML = html;
-
-            document.getElementById('mobile-report-month').onchange = function (e) {
-                state.selectedReportMonth = e.target.value;
-                saveState();
-                renderReports();
-            };
-        }
-
-        document.getElementById('btn-print-report').onclick = function () { window.print(); };
         var mobileSearchInput = document.getElementById('mobile-client-search');
         if (mobileSearchInput) {
             mobileSearchInput.oninput = function (e) {

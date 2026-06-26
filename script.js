@@ -113,7 +113,7 @@ function saveState() {
 
 // 4. DOM Elements
 let contentArea, pageTitle, navItems, modalOverlay;
-let btnNewAppt, btnNewService, btnNewClient, btnPrintReport, searchZone, clientSearchInput;
+let btnNewAppt, btnNewService, btnNewClient, searchZone, clientSearchInput;
 let appointmentModal, clientModal, serviceModal, messageModal;
 
 function initDOMElements() {
@@ -124,7 +124,6 @@ function initDOMElements() {
     btnNewAppt = document.getElementById('btn-new-appointment');
     btnNewService = document.getElementById('btn-new-service');
     btnNewClient = document.getElementById('btn-new-client');
-    btnPrintReport = document.getElementById('btn-print-report');
     searchZone = document.getElementById('search-zone');
     clientSearchInput = document.getElementById('client-search');
     appointmentModal = document.getElementById('appointment-modal');
@@ -159,7 +158,6 @@ function refreshCurrentView() {
     if (btnNewAppt) btnNewAppt.style.display = (view === 'calendar') ? 'inline-flex' : 'none';
     if (btnNewService) btnNewService.style.display = (view === 'services') ? 'inline-flex' : 'none';
     if (btnNewClient) btnNewClient.style.display = (view === 'clients') ? 'inline-flex' : 'none';
-    if (btnPrintReport) btnPrintReport.style.display = (view === 'reports') ? 'inline-flex' : 'none';
     if (searchZone) {
         searchZone.style.display = (view === 'clients' || view === 'services') ? 'block' : 'none';
         if (clientSearchInput) {
@@ -171,7 +169,6 @@ function refreshCurrentView() {
     else if (view === 'calendar') renderCalendar();
     else if (view === 'clients') renderClients();
     else if (view === 'services') renderServices();
-    else if (view === 'reports') renderReports();
     else if (view === 'birthdays') renderBirthdays();
     else if (view === 'massmsg') renderMassMessage();
     else if (view === 'backup') renderBackup();
@@ -377,43 +374,6 @@ function renderServices() {
             </div>
         </div>
     `).join('')}</div>`;
-}
-
-function renderReports() {
-    pageTitle.textContent = "Relatórios";
-    if (!state.selectedReportMonth) state.selectedReportMonth = new Date().toISOString().substring(0, 7);
-    const selectedMonth = state.selectedReportMonth;
-    const monthAppts = state.appointments.filter(a => a.date.startsWith(selectedMonth));
-    const serviceSummary = {};
-    let totalRevenue = 0;
-    monthAppts.forEach(appt => {
-        const types = Array.isArray(appt.type) ? appt.type : [appt.type];
-        types.forEach(serviceName => {
-            const service = state.services.find(s => s.name === serviceName);
-            const price = service ? parseFloat(service.price) : 0;
-            if (!serviceSummary[serviceName]) serviceSummary[serviceName] = { count: 0, revenue: 0 };
-            serviceSummary[serviceName].count++;
-            serviceSummary[serviceName].revenue += price;
-            totalRevenue += price;
-        });
-    });
-    const displayMonth = new Date(selectedMonth + '-01').toLocaleDateString('pt-PT', { month: 'long', year: 'numeric' });
-    contentArea.innerHTML = `
-        <div class="report-controls no-print" style="margin-bottom: 2rem; display: flex; align-items: center; gap: 1rem; padding: 1rem; background: white; border-radius: 12px;">
-            <div style="font-weight: 600; font-size: 0.9rem;">Mês:</div>
-            <input type="month" id="report-month-picker" value="${selectedMonth}" style="padding: 8px; border-radius: 8px; border: 1px solid var(--border-color);">
-            <button class="btn btn-ghost" onclick="downloadBackup()" style="margin-left: auto;"><i class="ph ph-cloud-arrow-down"></i> Backup</button>
-        </div>
-        <div class="report-paper">
-            <h3>Relatório de ${displayMonth}</h3>
-            <div class="dashboard-grid" style="margin-top: 1rem;">
-                <div class="card"><span class="label">Faturamento</span><span class="value">€ ${totalRevenue.toFixed(2)}</span></div>
-                <div class="card"><span class="label">Total</span><span class="value">${monthAppts.length}</span></div>
-            </div>
-        </div>
-    `;
-    const picker = document.getElementById('report-month-picker');
-    if (picker) picker.onchange = (e) => { state.selectedReportMonth = e.target.value; saveState(); renderReports(); };
 }
 
 function renderBirthdays() {
