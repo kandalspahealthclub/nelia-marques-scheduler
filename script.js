@@ -614,7 +614,7 @@ function renderMassMessage() {
         if (el) el.textContent = e.target.value.length;
     });
 
-    // ── WhatsApp sequential send ──────────────────────────────────────────
+    // ── WhatsApp: gerar lista de links directos (um botão por pessoa) ─────
     document.getElementById('btn-mass-whatsapp').addEventListener('click', () => {
         const msg = document.getElementById('mass-msg-content').value.trim();
         if (!msg) { showNotification('Escreva uma mensagem primeiro!'); return; }
@@ -625,57 +625,91 @@ function renderMassMessage() {
             return;
         }
 
-        // Store queue globally so the "Próximo" button can advance it
-        window._massWaQueue = recipients;
-        window._massWaIndex = 0;
-        window._massWaMsg = msg;
-        window.massWaNext = function() {
-            const idx = window._massWaIndex;
-            const queue = window._massWaQueue;
-            const message = window._massWaMsg;
-            const progressEl = document.getElementById('mass-wa-progress');
-            if (!progressEl) return;
-            if (idx >= queue.length) {
-                progressEl.style.display = 'flex';
-                progressEl.style.background = '#d1fae5';
-                progressEl.innerHTML = `<i class="ph ph-check-circle" style="color:#10b981; font-size:1.3rem;"></i> <span>Concluído! <strong>${queue.length}</strong> mensagem(ns) enviada(s) via WhatsApp.</span>`;
-                window._massWaQueue = [];
-                return;
-            }
-            const c = queue[idx];
+        const progressEl = document.getElementById('mass-wa-progress');
+        if (!progressEl) return;
+
+        // Gerar um botão directo por destinatário — evita bloqueio de popup em mobile
+        progressEl.style.display = 'flex';
+        progressEl.style.flexDirection = 'column';
+        progressEl.style.gap = '8px';
+        progressEl.style.background = 'var(--accent-light)';
+        progressEl.style.borderRadius = '12px';
+        progressEl.style.padding = '12px';
+
+        let html = `<div style="font-size:0.82rem; font-weight:700; color:var(--accent); margin-bottom:4px;">
+            <i class="ph ph-whatsapp-logo"></i> Toque em cada nome para enviar (${recipients.length}):
+        </div>`;
+
+        recipients.forEach((c, idx) => {
             const phone = c.phone.replace(/\D/g, '');
-            window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank');
-            window._massWaIndex++;
-            const next = window._massWaIndex;
-            progressEl.style.display = 'flex';
-            progressEl.style.background = 'var(--accent-light)';
-            if (next < queue.length) {
-                progressEl.innerHTML = `
-                    <i class="ph ph-paper-plane-tilt" style="color:var(--accent); font-size:1.2rem; flex-shrink:0;"></i>
-                    <span style="flex:1;">Enviado para <strong>${c.name}</strong> &mdash; ${next}/${queue.length}</span>
-                    <button onclick="window.massWaNext()" style="border:none; background:var(--accent); color:white; border-radius:8px; padding:6px 14px; cursor:pointer; font-size:0.85rem; font-weight:600;">Próximo &rsaquo;</button>
-                `;
-            } else {
-                // Last one, auto-finish
-                progressEl.innerHTML = `<i class="ph ph-spinner" style="color:var(--accent); font-size:1.2rem;"></i> <span>Enviado para <strong>${c.name}</strong>. A fechar...</span>`;
-                setTimeout(() => window.massWaNext(), 800);
-            }
-        };
-        window.massWaNext();
+            const waUrl = `https://wa.me/351${phone}?text=${encodeURIComponent(msg)}`;
+            html += `
+                <a href="${waUrl}" target="_blank" rel="noopener"
+                   id="wa-link-${idx}"
+                   onclick="this.style.opacity='0.4'; this.style.textDecoration='line-through';"
+                   style="display:flex; align-items:center; gap:10px; padding:10px 12px; background:white;
+                          border-radius:10px; border:1px solid #d1fae5; text-decoration:none; color:#065f46;
+                          font-size:0.88rem; font-weight:600; transition:opacity 0.2s;">
+                    <i class="ph ph-whatsapp-logo" style="color:#25D366; font-size:1.2rem; flex-shrink:0;"></i>
+                    <span style="flex:1;">${c.name}</span>
+                    <i class="ph ph-arrow-square-out" style="color:#25D366; font-size:0.9rem;"></i>
+                </a>`;
+        });
+
+        progressEl.innerHTML = html;
+
+        // Scroll até à zona de progresso
+        progressEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     });
 
-    // ── SMS native send ───────────────────────────────────────────────────
+    // ── SMS: gerar lista de links directos (um botão por pessoa) ─────────
     document.getElementById('btn-mass-sms').addEventListener('click', () => {
         const msg = document.getElementById('mass-msg-content').value.trim();
         if (!msg) { showNotification('Escreva uma mensagem primeiro!'); return; }
 
-        const phones = getSelected().map(c => c.phone.replace(/\D/g, '')).filter(p => p);
-        if (phones.length === 0) {
+        const recipients = getSelected().filter(c => c.phone);
+        if (recipients.length === 0) {
             showNotification('Selecione pelo menos um cliente com número de telefone.');
             return;
         }
-        // sms: URI — works natively on mobile; on desktop may open default SMS app
-        window.location.href = `sms:${phones.join(',')}?&body=${encodeURIComponent(msg)}`;
+
+        const progressEl = document.getElementById('mass-wa-progress');
+        if (!progressEl) return;
+
+        // Detectar separador correcto para iOS vs Android
+        const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+        const sep = isIos ? '&' : '?';
+
+        progressEl.style.display = 'flex';
+        progressEl.style.flexDirection = 'column';
+        progressEl.style.gap = '8px';
+        progressEl.style.background = '#eff6ff';
+        progressEl.style.borderRadius = '12px';
+        progressEl.style.padding = '12px';
+
+        let html = `<div style="font-size:0.82rem; font-weight:700; color:#1d4ed8; margin-bottom:4px;">
+            <i class="ph ph-device-mobile"></i> Toque em cada nome para enviar SMS (${recipients.length}):
+        </div>`;
+
+        recipients.forEach((c, idx) => {
+            const phone = c.phone.replace(/\D/g, '');
+            const smsUrl = `sms:${phone}${sep}body=${encodeURIComponent(msg)}`;
+            html += `
+                <a href="${smsUrl}"
+                   id="sms-link-${idx}"
+                   onclick="this.style.opacity='0.4'; this.style.textDecoration='line-through';"
+                   style="display:flex; align-items:center; gap:10px; padding:10px 12px; background:white;
+                          border-radius:10px; border:1px solid #bfdbfe; text-decoration:none; color:#1e3a8a;
+                          font-size:0.88rem; font-weight:600; transition:opacity 0.2s;">
+                    <i class="ph ph-device-mobile" style="color:#3b82f6; font-size:1.2rem; flex-shrink:0;"></i>
+                    <span style="flex:1;">${c.name}</span>
+                    <span style="font-size:0.75rem; color:#64748b;">${c.phone}</span>
+                    <i class="ph ph-arrow-square-out" style="color:#3b82f6; font-size:0.9rem;"></i>
+                </a>`;
+        });
+
+        progressEl.innerHTML = html;
+        progressEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     });
 }
 
