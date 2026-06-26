@@ -1006,9 +1006,60 @@
         }
         function renderMessages() {
             pageTitle.textContent = "Mensagens";
-            contentArea.innerHTML = state.messages.slice().reverse().map(function (m) {
-                return '<div class="appointment-item"><div class="appt-details" style="flex:1;"><span class="client-name">Para: ' + m.to + '</span><span class="appt-type">' + m.method + ' • ' + m.date + '</span><div style="font-size:0.85rem;margin-top:4px;">' + m.content + '</div></div><div class="appt-actions"><button onclick="del(\'message\',' + m.id + ')" style="color:red;"><i class="ph ph-trash"></i></button></div></div>';
-            }).join('');
+
+            if (!state.messages || state.messages.length === 0) {
+                contentArea.innerHTML = '<div style="text-align:center; padding:3rem 1rem; color:var(--text-secondary);">' +
+                    '<i class="ph ph-paper-plane-tilt" style="font-size:3rem; opacity:0.3; display:block; margin-bottom:1rem;"></i>' +
+                    '<p style="font-size:0.95rem;">Sem mensagens enviadas.</p>' +
+                    '</div>';
+                return;
+            }
+
+            var msgs = state.messages.slice().reverse();
+            var html = '<div style="display:flex; flex-direction:column; gap:0.75rem; padding-bottom:1rem;">';
+
+            msgs.forEach(function(m) {
+                var isWA = (m.method === 'WhatsApp');
+                var methodColor = isWA ? '#25D366' : '#3b82f6';
+                var methodIcon = isWA ? 'ph-whatsapp-logo' : 'ph-device-mobile';
+                var methodLabel = isWA ? 'WhatsApp' : 'SMS';
+
+                // Truncate message preview to 2 lines
+                var preview = (m.content || '').replace(/\n/g, ' ').trim();
+                if (preview.length > 80) preview = preview.substring(0, 80) + '…';
+
+                // Recipient name (strip phone if stored as phone)
+                var recipientName = m.to || '—';
+                var client = state.clients.find(function(c) { return c.name === m.to || c.phone === m.to; });
+                if (client) recipientName = client.name;
+
+                html +=
+                    '<div style="background:white; border-radius:16px; border:1px solid var(--border-color); padding:1rem; box-shadow:var(--shadow-sm);">' +
+                        // Header row: name + method badge + delete
+                        '<div style="display:flex; align-items:center; gap:0.6rem; margin-bottom:0.5rem;">' +
+                            '<div style="width:36px; height:36px; border-radius:10px; background:var(--accent-light); color:var(--accent); display:flex; align-items:center; justify-content:center; flex-shrink:0; font-weight:700; font-size:0.85rem;">' +
+                                recipientName.charAt(0).toUpperCase() +
+                            '</div>' +
+                            '<div style="flex:1; min-width:0;">' +
+                                '<div style="font-weight:700; font-size:0.95rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + recipientName + '</div>' +
+                                '<div style="font-size:0.75rem; color:var(--text-secondary);">' + (m.date || '') + (m.time ? ' • ' + m.time : '') + '</div>' +
+                            '</div>' +
+                            '<span style="background:' + methodColor + '1a; color:' + methodColor + '; border-radius:20px; padding:3px 10px; font-size:0.72rem; font-weight:700; display:flex; align-items:center; gap:4px; flex-shrink:0;">' +
+                                '<i class="ph ' + methodIcon + '"></i> ' + methodLabel +
+                            '</span>' +
+                            '<button onclick="del(\'message\',' + m.id + ')" style="background:none; border:none; color:#cbd5e1; padding:4px; cursor:pointer; flex-shrink:0;">' +
+                                '<i class="ph ph-trash" style="font-size:1.1rem;"></i>' +
+                            '</button>' +
+                        '</div>' +
+                        // Message preview
+                        '<div style="font-size:0.82rem; color:var(--text-secondary); background:var(--bg-app); border-radius:10px; padding:0.6rem 0.8rem; line-height:1.5;">' +
+                            preview +
+                        '</div>' +
+                    '</div>';
+            });
+
+            html += '</div>';
+            contentArea.innerHTML = html;
         }
         var mobileSearchInput = document.getElementById('mobile-client-search');
         if (mobileSearchInput) {
@@ -1051,12 +1102,31 @@
             var hour = time || '[Hora]';
             var defaultMsg = "Olá, " + firstName + "! ✨\nAqui é a Nélia a relembrar que tem marcação amanhã às " + hour + ".\nSe não conseguir comparecer, agradeço que me avise.\nMuito obrigada\nAté breve! 😊";
 
-            document.getElementById('modal-title-text').innerText = "Msg para " + name;
+            document.getElementById('modal-title-text').innerText = "Enviar Mensagem";
             document.getElementById('modal-content-body').innerHTML =
-                '<div class="form-group"><textarea id="msg-text" placeholder="Escreva aqui..." style="height:150px;">' + defaultMsg + '</textarea></div>' +
-                '<div style="display:flex; gap:0.5rem;">' +
-                '<button class="btn btn-primary" style="flex:1; background:#3b82f6;" onclick="doSend(\'sms\',\'' + phone + '\')">SMS</button>' +
-                '<button class="btn btn-primary" style="flex:1; background:#25D366;" onclick="doSend(\'wa\',\'' + phone + '\')">WhatsApp</button>' +
+                // Recipient card
+                '<div style="display:flex; align-items:center; gap:0.75rem; background:var(--accent-light); border-radius:12px; padding:0.75rem 1rem; margin-bottom:1.25rem;">' +
+                    '<div style="width:40px; height:40px; border-radius:12px; background:linear-gradient(135deg,var(--accent),#a855f7); color:white; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:1rem; flex-shrink:0;">' +
+                        name.charAt(0).toUpperCase() +
+                    '</div>' +
+                    '<div>' +
+                        '<div style="font-weight:700; font-size:0.95rem;">' + name + '</div>' +
+                        '<div style="font-size:0.8rem; color:var(--text-secondary);">' + (phone || 'Sem contacto') + '</div>' +
+                    '</div>' +
+                '</div>' +
+                // Textarea
+                '<div class="form-group">' +
+                    '<label style="font-size:0.85rem; font-weight:600; color:var(--text-secondary); margin-bottom:6px; display:block;">Mensagem</label>' +
+                    '<textarea id="msg-text" placeholder="Escreva aqui..." style="width:100%; height:160px; padding:12px; border:1.5px solid var(--border-color); border-radius:12px; font-size:0.9rem; font-family:inherit; line-height:1.5; resize:none; box-sizing:border-box;">' + defaultMsg + '</textarea>' +
+                '</div>' +
+                // Buttons
+                '<div style="display:flex; flex-direction:column; gap:0.5rem; margin-top:0.25rem;">' +
+                    '<button class="btn btn-primary" style="width:100%; justify-content:center; background:#25D366; border:none;" onclick="doSend(\'wa\',\'' + phone + '\')">' +
+                        '<i class="ph ph-whatsapp-logo" style="font-size:1.2rem;"></i> Enviar via WhatsApp' +
+                    '</button>' +
+                    '<button class="btn btn-primary" style="width:100%; justify-content:center; background:#3b82f6; border:none;" onclick="doSend(\'sms\',\'' + phone + '\')">' +
+                        '<i class="ph ph-device-mobile" style="font-size:1.2rem;"></i> Enviar via SMS' +
+                    '</button>' +
                 '</div>';
             modalOverlay.classList.add('open');
         };
@@ -1067,11 +1137,10 @@
                 var sep = (/iphone|ipad|ipod/.test(navigator.userAgent.toLowerCase())) ? '&' : '?';
                 window.location.href = 'sms:' + cln + sep + 'body=' + encodeURIComponent(txt);
             } else {
-                window.open('https://wa.me/55' + cln + '?text=' + encodeURIComponent(txt));
+                window.open('https://wa.me/351' + cln + '?text=' + encodeURIComponent(txt));
             }
-            state.messages.push({ id: Date.now(), to: phone, content: txt, method: type === 'sms' ? 'SMS' : 'WhatsApp', date: new Date().toLocaleDateString() });
+            state.messages.push({ id: Date.now(), to: phone, content: txt, method: type === 'sms' ? 'SMS' : 'WhatsApp', date: new Date().toLocaleDateString('pt-PT'), time: new Date().toLocaleTimeString('pt-PT', {hour:'2-digit', minute:'2-digit'}) });
             saveState(); modalOverlay.classList.remove('open'); refreshView();
-            // Toast
             var t = document.createElement('div'); t.className = 'toast'; t.innerText = 'Enviado!'; document.body.appendChild(t); setTimeout(function () { t.remove() }, 2000);
         };
 
