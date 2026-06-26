@@ -48,16 +48,16 @@ function updateSyncStatus(status) {
     if (!indicator) {
         indicator = document.createElement('div');
         indicator.id = 'sync-indicator';
-        indicator.style = 'position:fixed; bottom:20px; right:20px; font-size:0.75rem; color:var(--text-tertiary); background:white; padding:4px 10px; border-radius:20px; box-shadow:var(--shadow-md); z-index:9999; display:flex; align-items:center; gap:6px; border:1px solid var(--border-color); pointer-events:none; transition: opacity 0.3s;';
+        indicator.style = 'position:fixed; top:12px; left:50%; transform:translateX(-50%); font-size:0.75rem; color:var(--text-tertiary); background:white; padding:4px 14px; border-radius:20px; box-shadow:var(--shadow-md); z-index:9999; display:flex; align-items:center; gap:6px; border:1px solid var(--border-color); pointer-events:none; transition:opacity 0.4s; opacity:0;';
         document.body.appendChild(indicator);
     }
 
     if (status === 'saving') {
-        indicator.innerHTML = '<i class="ph-fill ph-circle-notch ph-spin" style="color:var(--accent);"></i> A guardar na nuvem...';
+        indicator.innerHTML = '<i class="ph-fill ph-circle-notch" style="color:var(--accent);"></i> A guardar...';
         indicator.style.opacity = '1';
     } else if (status === 'synced') {
-        indicator.innerHTML = '<i class="ph-fill ph-check-circle" style="color:var(--success);"></i> Nuvem Sincronizada';
-        setTimeout(() => { if (!isSaving && !isPendingSave) indicator.style.opacity = '0'; }, 3000);
+        // Desaparece logo sem mostrar mensagem
+        indicator.style.opacity = '0';
     } else if (status === 'error') {
         indicator.innerHTML = '<i class="ph-fill ph-warning-circle" style="color:var(--danger);"></i> Erro de ligação';
         indicator.style.opacity = '1';
