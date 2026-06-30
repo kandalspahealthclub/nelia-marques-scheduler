@@ -88,9 +88,16 @@
                     <div class="form-group">
                         <label>Cliente</label>
                         <div style="display: flex; gap: 0.5rem; align-items: center;">
-                            <input list="client-list" id="appt-name" required style="flex: 1;"
-                                placeholder="Escolha um cliente..." autocomplete="off">
-                            <datalist id="client-list"></datalist>
+                            <div style="position: relative; flex: 1;">
+                                <input type="text" id="appt-name" required
+                                    placeholder="Escreva o nome do cliente..." autocomplete="off"
+                                    style="width: 100%;">
+                                <div id="appt-name-dropdown"
+                                    style="display:none; position:absolute; top:100%; left:0; right:0; background:white;
+                                           border:1.5px solid var(--accent); border-top:none; border-radius:0 0 12px 12px;
+                                           max-height:200px; overflow-y:auto; z-index:100; box-shadow:0 8px 16px rgba(0,0,0,0.1);">
+                                </div>
+                            </div>
                             <button type="button" class="btn btn-ghost" id="btn-quick-add-client" title="Novo Cliente"
                                 style="padding: 6px; aspect-ratio: 1/1; border: 1px solid var(--border-color); border-radius: 8px;">
                                 <i class="ph ph-user-plus" style="font-size: 1.2rem;"></i>

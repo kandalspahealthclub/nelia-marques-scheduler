@@ -773,8 +773,8 @@ function triggerEditAppt(id) {
     renderSelectedServicesList();
     document.getElementById('modal-title').textContent = "Editar Marcação";
     updateServiceOptions();
-    updateClientDatalist();
     openModal(appointmentModal);
+    setTimeout(initClientSearch, 50);
 }
 
 function triggerEditClient(id) {
@@ -830,12 +830,58 @@ function updateServiceOptions() {
 }
 
 function updateClientDatalist() {
-    const dataList = document.getElementById('client-list');
-    if (!dataList) return;
-    dataList.innerHTML = state.clients.map(c => {
-        // Keeping the value as the name only, but showing observations in the dropdown text
-        return `<option value="${c.name}">${c.name}${c.observations ? ' - ' + c.observations : ''}</option>`;
-    }).join('');
+    // Já não usa datalist — o dropdown customizado é inicializado via initClientSearch()
+}
+
+function initClientSearch() {
+    const input = document.getElementById('appt-name');
+    const dropdown = document.getElementById('appt-name-dropdown');
+    if (!input || !dropdown) return;
+
+    const normalize = str => (str || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+
+    const showDropdown = (filter) => {
+        const q = normalize(filter);
+        const matches = state.clients
+            .filter(c => !q || normalize(c.name).includes(q))
+            .slice(0, 30); // max 30 resultados
+
+        if (matches.length === 0 || !filter) {
+            dropdown.style.display = 'none';
+            return;
+        }
+
+        dropdown.innerHTML = matches.map(c => {
+            const label = c.name + (c.observations ? ` <span style="color:var(--text-tertiary); font-size:0.8rem;">(${c.observations})</span>` : '');
+            return `<div data-name="${c.name}"
+                style="padding:10px 14px; cursor:pointer; font-size:0.9rem; border-bottom:1px solid var(--border-color);"
+                onmousedown="event.preventDefault()"
+                onmouseenter="this.style.background='var(--accent-light)'"
+                onmouseleave="this.style.background='white'">
+                ${label}
+            </div>`;
+        }).join('');
+
+        dropdown.style.display = 'block';
+
+        // Clique num item
+        dropdown.querySelectorAll('[data-name]').forEach(item => {
+            item.addEventListener('mousedown', () => {
+                input.value = item.dataset.name;
+                dropdown.style.display = 'none';
+            });
+            // Touch em mobile
+            item.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                input.value = item.dataset.name;
+                dropdown.style.display = 'none';
+            });
+        });
+    };
+
+    input.addEventListener('input', e => showDropdown(e.target.value));
+    input.addEventListener('focus', e => { if (e.target.value) showDropdown(e.target.value); });
+    input.addEventListener('blur', () => setTimeout(() => { dropdown.style.display = 'none'; }, 150));
 }
 
 function renderSelectedServicesList() {
@@ -905,8 +951,9 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('modal-title').textContent = "Nova Marcação";
         document.getElementById('appt-date').value = new Date().toISOString().split('T')[0];
         updateServiceOptions();
-        updateClientDatalist();
         openModal(appointmentModal);
+        // Inicializar pesquisa com normalização após o modal abrir
+        setTimeout(initClientSearch, 50);
     };
 
     document.getElementById('btn-new-service').onclick = () => {
