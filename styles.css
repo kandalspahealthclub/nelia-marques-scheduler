@@ -12,10 +12,10 @@
 
 :root {
     /* Modern Sophisticated Palette - Midnight Bloom */
-    --bg-app: #fdfbff;
+    --bg-app: #ede8f5;
     --bg-sidebar: #ffffff;
     --bg-card: #ffffff;
-    --bg-hover: #f5f3ff;
+    --bg-hover: #e8e2f5;
 
     --text-primary: #1e1b4b; /* Deep Indigo */
     --text-secondary: #4338ca;
@@ -60,7 +60,7 @@ body {
     overflow: hidden;
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
-    background: radial-gradient(circle at top right, #f5f3ff 0%, #ffffff 100%);
+    background: radial-gradient(circle at top right, #e4dcf7 0%, #ede8f5 100%);
 }
 
 /* Em mobile, deixar o body com scroll natural */
