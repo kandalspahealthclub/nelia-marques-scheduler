@@ -972,31 +972,90 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('appointment-form').onsubmit = async (e) => {
         e.preventDefault();
         const id = document.getElementById('appt-id').value;
-        
+
         let clientName = document.getElementById('appt-name').value;
-        // Clean name if user selected it with observation suffix from old datalist version
         if (clientName.includes(' - ')) {
             clientName = clientName.split(' - ')[0].trim();
         }
 
-        const newAppt = {
-            id: id || Date.now(),
-            clientName: clientName,
-            date: document.getElementById('appt-date').value,
-            time: document.getElementById('appt-time').value,
-            type: selectedServices,
-            price: selectedServices.reduce((acc, sName) => {
-                const s = state.services.find(ser => ser.name === sName);
-                return acc + (s ? parseFloat(s.price) : 0);
-            }, 0)
+        const apptDate = document.getElementById('appt-date').value;
+        const apptTime = document.getElementById('appt-time').value;
+
+        // Verificar se é data/hora no passado
+        const now = new Date();
+        const apptDateTime = new Date(apptDate + 'T' + (apptTime || '00:00'));
+        const isPast = apptDateTime < now;
+
+        const doSave = async () => {
+            const newAppt = {
+                id: id || Date.now(),
+                clientName: clientName,
+                date: apptDate,
+                time: apptTime,
+                type: selectedServices,
+                price: selectedServices.reduce((acc, sName) => {
+                    const s = state.services.find(ser => ser.name === sName);
+                    return acc + (s ? parseFloat(s.price) : 0);
+                }, 0)
+            };
+            if (id) {
+                const idx = state.appointments.findIndex(a => a.id == id);
+                if (idx !== -1) state.appointments[idx] = newAppt;
+            } else {
+                state.appointments.push(newAppt);
+            }
+            await saveState();
+            closeModals();
+            refreshCurrentView();
+            showNotification('Guardado!');
         };
-        if(id) {
-            const idx = state.appointments.findIndex(a => a.id == id);
-            if(idx !== -1) state.appointments[idx] = newAppt;
+
+        if (isPast) {
+            // Mostrar aviso inline no modal
+            const existing = document.getElementById('appt-past-warning');
+            if (existing) { existing.remove(); }
+
+            const warning = document.createElement('div');
+            warning.id = 'appt-past-warning';
+            warning.innerHTML = `
+                <div style="background:#fef3c7; border:1.5px solid #f59e0b; border-radius:12px; padding:12px 14px; margin-bottom:1rem;">
+                    <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+                        <i class="ph ph-warning" style="color:#d97706; font-size:1.2rem; flex-shrink:0;"></i>
+                        <span style="font-weight:700; font-size:0.9rem; color:#92400e;">Data ou hora já passou</span>
+                    </div>
+                    <div style="font-size:0.82rem; color:#92400e; margin-bottom:10px;">
+                        A marcação é para <strong>${apptDate.split('-').reverse().join('/')}</strong> às <strong>${apptTime}</strong>, que já passou. Deseja guardar mesmo assim?
+                    </div>
+                    <div style="display:flex; gap:8px;">
+                        <button type="button" id="appt-warn-confirm" class="btn btn-primary"
+                            style="flex:1; background:#d97706; border:none; padding:8px; font-size:0.85rem; border-radius:8px;">
+                            Guardar mesmo assim
+                        </button>
+                        <button type="button" id="appt-warn-cancel" class="btn btn-ghost"
+                            style="flex:1; padding:8px; font-size:0.85rem; border-radius:8px;">
+                            Corrigir
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            // Inserir antes do botão de submit
+            const formActions = document.querySelector('#appointment-form .form-actions');
+            formActions.parentNode.insertBefore(warning, formActions);
+
+            document.getElementById('appt-warn-confirm').onclick = async () => {
+                warning.remove();
+                await doSave();
+            };
+            document.getElementById('appt-warn-cancel').onclick = () => {
+                warning.remove();
+            };
+
+            // Scroll para o aviso
+            warning.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         } else {
-            state.appointments.push(newAppt);
+            await doSave();
         }
-        await saveState(); closeModals(); refreshCurrentView(); showNotification('Guardado!');
     };
 
     document.getElementById('client-form').onsubmit = async (e) => {
